@@ -4,9 +4,11 @@ Create a session to communicate with the engine
 Create the Base class
 """
 import os
+from dotenv import load_dotenv
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker, DeclarativeBase
 
+load_dotenv()
 DATABASE_URL = os.getenv(key="DATABASE_URL")
 engine = create_engine(DATABASE_URL, echo=True)
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
