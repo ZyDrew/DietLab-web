@@ -1,14 +1,11 @@
 from pydantic import BaseModel, ConfigDict
 import datetime
-from typing import Optional
 
-class PatientCreate(BaseModel):
-    lastname: str
-    firstname: str
-    birthdate: datetime.date
-    notes: Optional[str] = None
+class MealPlanCreate(BaseModel):
+    patient_id: int
+    start_date: datetime.date
 
-class PatientResponse(PatientCreate):
+class MealPlanResponse(MealPlanCreate):
     id: int
 
     #Allow Pydantic to read SQLAlchemy's python object as a dictionnary

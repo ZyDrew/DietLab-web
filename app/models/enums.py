@@ -1,6 +1,6 @@
-import enum
+from enum import Enum
 
-class UnitEnum(enum.Enum):
+class UnitEnum(str, Enum):
     GRAM = "gram"             #gramme - g
     MGRAM = "milligram"       #milligramme - mg
     ML = "ml"                 #millilitre
@@ -9,12 +9,12 @@ class UnitEnum(enum.Enum):
     TBSP = "tbsp"             #tablespoon - cuillère à soupe
     UNIT = "unit"             #pièce - ex: 3 oeufs
 
-class AppointmentEnum(enum.Enum):
+class AppointmentEnum(str, Enum):
     FIRST = "first"           #Premier rendez-vous
     FOLLOW_UP = "follow_up"   #Suivi
     CLOSURE = "closure"       #Dernier rendez-vous
 
-class MealPlanEnum(enum.Enum):
+class MealPlanEnum(str, Enum):
     BREAKFAST = "breakfast"             #Petit déjeuner
     MORNING_SNACK = "morning_snack"     #Collation du matin (10am-10h)
     LUNCH = "lunch"                     #Dîner
