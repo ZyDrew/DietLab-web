@@ -3,6 +3,10 @@ from sqlalchemy.orm import Session
 from app.database import get_db
 from app.schemas.patients import PatientResponse, PatientCreate
 from app.models.patients import Patients
+from app.schemas.patient_comorbidity import PatientComorbidityCreate, PatientComorbidityResponse
+from app.models.patient_comorbidity import PatientComorbidity
+from app.schemas.patient_measurement import PatientMeasurementCreate, PatientMeasurementResponse
+from app.models.patient_measurement import PatientMeasurement
 
 patients_router = APIRouter(
     prefix="/patients",
@@ -63,3 +67,56 @@ def delete_patient(patient_id: int, db: Session = Depends(get_db)):
     db.commit()
 
     return Response(status_code=204)
+
+# ADD ONE COMORBIDITY TO ONE PATIENT
+@patients_router.post("/{patient_id}/comorbidities", response_model=PatientComorbidityResponse)
+def add_comorbidity_to_patient(patient_id: int, comorbidity_in: PatientComorbidityCreate, db: Session = Depends(get_db)):
+    patient = db.query(Patients).filter(Patients.id == patient_id).first()
+
+    if patient is None:
+        raise HTTPException(404, "Patient introuvable")
+    
+    new_relation = PatientComorbidity(
+        patient_id = patient_id,
+        comorbidity_id = comorbidity_in.comorbidity_id
+    )
+    db.add(new_relation)
+    db.commit()
+    db.refresh(new_relation)
+    return new_relation
+
+# DELETE ONE RELATION : PATIENT-COMORBIDITY
+@patients_router.delete("/{patient_id}/{comorbidity_id}", status_code=204)
+def delete_patient(patient_id: int, comorbidity_id: int, db: Session = Depends(get_db)):
+    relation = db.query(PatientComorbidity).filter(PatientComorbidity.patient_id == patient_id and PatientComorbidity.comorbidity_id == comorbidity_id).first()
+
+    if relation is None:
+        raise HTTPException(404, "Relation Patient-Comorbidité à supprimer, introuvable")
+    
+    db.delete(relation)
+    db.commit()
+
+    return Response(status_code=204)
+
+# SELECT ALL MEASURES FOR ONE PATIENT
+@patients_router.get("/{patient_id}/measurement", response_model=list[PatientMeasurementResponse])
+def get_all_measurement(patient_id: int, db: Session = Depends(get_db)):
+    return db.query(PatientMeasurement).filter(PatientMeasurement.id == patient_id).all()
+
+# ADD ONE MEASUREMENT TO PATIENT
+@patients_router.post("/{patient_id}/measurement", response_model=PatientMeasurementResponse)
+def add_measurement_to_patient(patient_id: int, measurement_in: PatientMeasurementCreate, db: Session = Depends(get_db)):
+    patient = db.query(Patients).filter(Patients.id == patient_id).first()
+
+    if patient is None:
+        raise HTTPException(404, "Patient introuvable")
+    
+    new_relation = PatientMeasurement(
+        patient_id = patient_id,
+        **measurement_in.model_dump()
+    )
+
+    db.add(new_relation)
+    db.commit()
+    db.refresh(new_relation)
+    return new_relation
