@@ -88,7 +88,12 @@ def add_comorbidity_to_patient(patient_id: int, comorbidity_in: PatientComorbidi
 # DELETE ONE RELATION : PATIENT-COMORBIDITY
 @patients_router.delete("/{patient_id}/{comorbidity_id}", status_code=204)
 def delete_patient(patient_id: int, comorbidity_id: int, db: Session = Depends(get_db)):
-    relation = db.query(PatientComorbidity).filter(PatientComorbidity.patient_id == patient_id and PatientComorbidity.comorbidity_id == comorbidity_id).first()
+    relation = (
+        db.query(PatientComorbidity)
+        .filter(PatientComorbidity.patient_id == patient_id)
+        .filter(PatientComorbidity.comorbidity_id == comorbidity_id)
+        .first()
+    )
 
     if relation is None:
         raise HTTPException(404, "Relation Patient-Comorbidité à supprimer, introuvable")
@@ -101,7 +106,7 @@ def delete_patient(patient_id: int, comorbidity_id: int, db: Session = Depends(g
 # SELECT ALL MEASURES FOR ONE PATIENT
 @patients_router.get("/{patient_id}/measurement", response_model=list[PatientMeasurementResponse])
 def get_all_measurement(patient_id: int, db: Session = Depends(get_db)):
-    return db.query(PatientMeasurement).filter(PatientMeasurement.id == patient_id).all()
+    return db.query(PatientMeasurement).filter(PatientMeasurement.patient_id == patient_id).all()
 
 # ADD ONE MEASUREMENT TO PATIENT
 @patients_router.post("/{patient_id}/measurement", response_model=PatientMeasurementResponse)
