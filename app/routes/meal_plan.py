@@ -1,10 +1,11 @@
 from fastapi import APIRouter, Depends, HTTPException, Response
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, joinedload
 from app.database import get_db
 from app.schemas.meal_plan import MealPlanCreate, MealPlanResponse
 from app.models.meal_plan import MealPlan
 from app.schemas.meal_plan_food import MealPlanFoodCreate, MealPlanFoodResponse
 from app.models.meal_plan_food import MealPlanFood
+from app.services.nutritions import calculate_macro
 
 meal_plan_router = APIRouter(
     prefix="/meal_plan",
@@ -124,3 +125,20 @@ def update_food_from_plan(meal_plan_id: int, food_in: MealPlanFoodCreate, db: Se
     db.refresh(upd_food)
 
     return upd_food
+
+# GET ALL FOODS FROM MEAL_PLAN + CALCULATE MACRO
+@meal_plan_router.get("/{meal_plan_id}/details")
+def get_all_foods(meal_plan_id: int, db: Session = Depends(get_db)):
+    meal_plan = db.query(MealPlan).filter(MealPlan.id == meal_plan_id).first()
+
+    if meal_plan is None:
+        raise HTTPException(404, "Plan alimentaire introuvable")
+    
+    meal_plan_foods = (
+        db.query(MealPlanFood)
+        .filter(MealPlanFood.plan_id == meal_plan_id)
+        .options(joinedload(MealPlanFood.food))
+        .all()
+    )
+
+    return calculate_macro(meal_plan_foods)

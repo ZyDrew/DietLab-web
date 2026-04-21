@@ -1,5 +1,9 @@
 from enum import Enum
 
+class GenderEnum(str, Enum):
+    FEMALE = "female"         #femme
+    MALE = "male"             #homme
+
 class UnitEnum(str, Enum):
     GRAM = "gram"             #gramme - g
     MGRAM = "milligram"       #milligramme - mg

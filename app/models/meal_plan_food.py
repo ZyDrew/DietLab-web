@@ -1,7 +1,7 @@
 from app.database import Base
 from app.models.enums import MealPlanEnum
 from sqlalchemy import ForeignKey, Integer, Enum, UniqueConstraint
-from sqlalchemy.orm import Mapped, mapped_column
+from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 class MealPlanFood(Base):
     __tablename__ = "meal_plan_food"    
@@ -12,6 +12,9 @@ class MealPlanFood(Base):
     quantity: Mapped[int] = mapped_column(Integer)
     period: Mapped[MealPlanEnum] = mapped_column(Enum(MealPlanEnum))
     frequency: Mapped[int] = mapped_column(Integer)
+
+    #Allows Python to know Food related object without additionnal query
+    food = relationship("Foods")
 
     __table_args__ = (UniqueConstraint("plan_id", "food_id", "period", name="uc_meal_plan_food"),)
 

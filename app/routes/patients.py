@@ -7,6 +7,8 @@ from app.schemas.patient_comorbidity import PatientComorbidityCreate, PatientCom
 from app.models.patient_comorbidity import PatientComorbidity
 from app.schemas.patient_measurement import PatientMeasurementCreate, PatientMeasurementResponse
 from app.models.patient_measurement import PatientMeasurement
+from app.services.utils import calculate_age
+from app.services.nutritions import calculate_bej, calculate_bmi, calculate_nap
 
 patients_router = APIRouter(
     prefix="/patients",
@@ -125,3 +127,78 @@ def add_measurement_to_patient(patient_id: int, measurement_in: PatientMeasureme
     db.commit()
     db.refresh(new_relation)
     return new_relation
+
+# CALCULATE PATIENT'S BMI
+@patients_router.get("/{patient_id}/bmi")
+def get_patient_bmi(patient_id: int, db: Session = Depends(get_db)):
+    patient = db.query(Patients).filter(Patients.id == patient_id).first()
+
+    if patient is None:
+        raise HTTPException(404, "Calcul BMI : patient introuvable")
+    
+    patient_mesure = (
+        db.query(PatientMeasurement)
+        .filter(PatientMeasurement.patient_id == patient_id)
+        .order_by(PatientMeasurement.id.desc())
+        .first()
+
+    )
+
+    if patient_mesure is None:
+        raise HTTPException(404, "Calcul BMI : aucune mesure enregistrée pour ce patient")
+
+    bmi, category = calculate_bmi(float(patient_mesure.height), float(patient_mesure.weight))
+    
+    return {"bmi" : f"{bmi:.2f}", "category" : category}
+
+# CALCULATE PATIENT'S BEJ w/o NAP
+@patients_router.get("/{patient_id}/bej")
+def get_patient_bej(patient_id: int, db: Session = Depends(get_db)):
+    patient = db.query(Patients).filter(Patients.id == patient_id).first()
+
+    if patient is None:
+        raise HTTPException(404, "Calcul BEJ : patient introuvable")
+    
+    patient_mesure = (
+        db.query(PatientMeasurement)
+        .filter(PatientMeasurement.patient_id == patient_id)
+        .order_by(PatientMeasurement.id.desc())
+        .first()
+
+    )
+
+    if patient_mesure is None:
+        raise HTTPException(404, "Calcul BEJ : aucune mesure enregistrée pour ce patient")
+
+    try:
+        bej = calculate_bej(patient.gender, calculate_age(patient.birthdate), float(patient_mesure.height), float(patient_mesure.weight))
+    except ValueError as e:
+        raise HTTPException(400, str(e))
+    
+    return {"bej" : f"{bej:.2f}"}
+
+# CALCULATE PATIENT'S BEJ w/ NAP
+@patients_router.get("/{patient_id}/nap/{nap}")
+def get_patient_nap(patient_id: int, nap: float, db: Session = Depends(get_db)):
+    patient = db.query(Patients).filter(Patients.id == patient_id).first()
+
+    if patient is None:
+        raise HTTPException(404, "Calcul BEJ+NAP : patient introuvable")
+    
+    patient_mesure = (
+        db.query(PatientMeasurement)
+        .filter(PatientMeasurement.patient_id == patient_id)
+        .order_by(PatientMeasurement.id.desc())
+        .first()
+
+    )
+
+    if patient_mesure is None:
+        raise HTTPException(404, "Calcul BEJ+NAP : aucune mesure enregistrée pour ce patient")
+
+    try:
+        calculated_nap = calculate_nap(patient.gender, calculate_age(patient.birthdate), float(patient_mesure.height), float(patient_mesure.weight), nap)
+    except ValueError as e:
+        raise HTTPException(400, str(e))
+    
+    return {"bej" : f"{calculated_nap:.2f}"}

@@ -1,7 +1,8 @@
 from app.database import Base
 import datetime
 from typing import Optional
-from sqlalchemy import String, Date, Text
+from app.models.enums import GenderEnum
+from sqlalchemy import String, Date, Text, Enum
 from sqlalchemy.orm import Mapped, mapped_column
 
 class Patients(Base):
@@ -10,6 +11,7 @@ class Patients(Base):
     id: Mapped[int] = mapped_column(primary_key=True)
     lastname: Mapped[str] = mapped_column(String(100))
     firstname: Mapped[str] = mapped_column(String(100))
+    gender: Mapped[GenderEnum] = mapped_column(Enum(GenderEnum))
     birthdate: Mapped[datetime.date] = mapped_column(Date)
     notes: Mapped[Optional[str]] = mapped_column(Text)
 
