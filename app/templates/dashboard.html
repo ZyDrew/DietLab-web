@@ -1,0 +1,23 @@
+<!-- templates/dashboard.html -->
+{% extends "base.html" %}
+{% block title %}Dashboard{% endblock %}
+
+{% block content %}
+
+<!-- List of patients -->
+<div id="patient-list" 
+    hx-get="/patients"
+    hx-trigger="load"
+    hx-swap="innerHTML">
+</div>
+
+<button hx-get="/patients/new" 
+        hx-target="#create-patient-form"
+        hx-swap="innerHTML">
+    Nouveau patient
+</button>
+
+<!-- Form to create a patient -->
+<div id="create-patient-form"></div>
+
+{% endblock %}

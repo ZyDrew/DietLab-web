@@ -1,0 +1,16 @@
+<!-- templates/patients/form.html -->
+
+<form   hx-post="/patients/new" 
+        hx-target="#patient-list" 
+        hx-swap="innerHTML"
+        hx-on::after-request="document.getElementById('create-patient-form').innerHTML=''">
+    <label>Nom : <input type="text" name="lastname" placeholder="Dupont..."></label>
+    <label>Prénom : <input type="text" name="firstname" placeholder="Jean..."></label>
+    <label>Date de naissance : <input type="date" name="birthdate"></label>
+    <label>Sexe : </label>
+    <label><input type="radio" name="gender" value="male"> Homme</label>
+    <label><input type="radio" name="gender" value="female"> Femme</label>
+    <label>Notes : <input type="text" name="notes"></label>
+
+    <button type="submit">Enregistrer</button>
+</form>
