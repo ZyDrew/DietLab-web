@@ -1,16 +1,48 @@
 <!-- templates/patients/form.html -->
 
+<div class="modal-header bg-success text-white">
+    <h5 class="modal-title">Nouveau patient</h5>
+    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+</div>
 <form   hx-post="/patients/new" 
         hx-target="#patient-list" 
         hx-swap="innerHTML"
-        hx-on::after-request="document.getElementById('create-patient-form').innerHTML=''">
-    <label>Nom : <input type="text" name="lastname" placeholder="Dupont..."></label>
-    <label>Prénom : <input type="text" name="firstname" placeholder="Jean..."></label>
-    <label>Date de naissance : <input type="date" name="birthdate"></label>
-    <label>Sexe : </label>
-    <label><input type="radio" name="gender" value="male"> Homme</label>
-    <label><input type="radio" name="gender" value="female"> Femme</label>
-    <label>Notes : <input type="text" name="notes"></label>
-
-    <button type="submit">Enregistrer</button>
+        hx-on::after-request="bootstrap.Modal.getInstance(document.getElementById('patientModal')).hide()">
+        <div class="modal-body">
+            <div class="row g-3">
+                <div class="col-md-6">
+                    <label class="form-label">Nom</label>
+                    <input type="text" class="form-control" name="lastname" placeholder="Dupont...">
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label">Prénom</label>
+                    <input type="text" class="form-control" name="firstname" placeholder="Jean...">
+                </div>
+                <div class="col-12">
+                    <label class="form-label">Date de naissance</label>
+                    <input type="date" class="form-control" name="birthdate">
+                </div>
+                <div class="col-12">
+                    <label class="form-label">Sexe</label>
+                    <div class="d-flex gap-3 mt-1">
+                        <div class="form-check">
+                            <input class="form-check-input" type="radio" name="gender" value="male" id="male">
+                            <label class="form-check-label" for="male">Homme</label>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input" type="radio" name="gender" value="female" id="female">
+                            <label class="form-check-label" for="female">Femme</label>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-12">
+                    <label class="form-label">Notes</label>
+                    <textarea class="form-control" name="notes" rows="2" placeholder="Informations complémentaires..."></textarea>
+                </div>
+            </div>
+        </div>
+        <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuler</button>
+            <button type="submit" class="btn btn-success">Enregistrer</button>
+        </div>
 </form>

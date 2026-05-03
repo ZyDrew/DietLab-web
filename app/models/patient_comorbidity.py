@@ -12,4 +12,4 @@ class PatientComorbidity(Base):
     __table_args__ = (UniqueConstraint("patient_id", "comorbidity_id", name="uc_patient_comorbidity"),)
     
     def __repr__(self):
-        return f"Comorbidité du patient(id={self.id}, id_patient={self.patient_id}, id_comorbidité={self.comorbidty_id})"
+        return f"Comorbidité du patient(id={self.id}, id_patient={self.patient_id}, id_comorbidité={self.comorbidity_id})"

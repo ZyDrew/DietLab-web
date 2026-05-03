@@ -1,0 +1,69 @@
+<!-- templates/patients/details.html-->
+
+{% extends "base.html" %}
+{% block title %}Fiche du patient{% endblock %}
+
+{% block content %}
+
+<div id="patient-details">
+    <div id="patient-infos">
+        <label>Nom : {{ patient.lastname }}</label>
+        <label>Prénom : {{ patient.firstname }}</label>
+        <label>Date de naissance : {{ patient.birthdate }}</label>
+        <label>Notes : {{ patient.notes }}</label>
+    </div>
+    <div id="patient-comorbidities">
+        <ul>
+            {% for comorbidity in comorbidities %}
+            <li>{{ comorbidity.name }}</li>
+            {% endfor %}
+        </ul>
+    </div>
+    <div id="patient-measurements">
+        <table class="table table-hover">
+            <caption>Mesures du patient</caption>
+            <thead class="table-dark">
+                <tr>
+                    <th>Poids</th>
+                    <th>Taille</th>
+                    <th>Date de prise</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for measure in measurements %}
+                <tr>
+                    <td>{{ measure.height }}</td>
+                    <td>{{ measure.weight }}</td>
+                    <td>{{ measure.record_date }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    <div id="patient-foodplan">
+        <table class="table table-hover">
+            <caption>Plan alimentaire du patient</caption>
+            <thead class="table-dark">
+                <tr>
+                    <th>Numéro</th>
+                    <th>Date de début</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for meal_plan in meal_plans %}
+                <tr>
+                    <td>{{ meal_plan.id }}</td>
+                    <td>{{ meal_plan.start_date }}</td>
+                    <td>
+                        <a href="/meal_plan/{{ meal_plan.id }}" class="btn btn-sm btn-info">Voir</a>
+                        <button class="btn btn-sm btn-danger">Supprimer</button>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+{% endblock %}

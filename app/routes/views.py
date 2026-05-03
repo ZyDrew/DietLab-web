@@ -2,7 +2,11 @@ from fastapi import APIRouter, Depends, Request
 from fastapi.templating import Jinja2Templates
 from sqlalchemy.orm import Session
 from app.database import get_db
+from app.models.comorbidities import Comorbidities
+from app.models.meal_plan import MealPlan
+from app.models.patient_comorbidity import PatientComorbidity
 from app.models.patients import Patients
+from app.models.patient_measurement import PatientMeasurement
 from app.schemas.patients import PatientCreate
 from app.dependencies.patient_form import get_patient_form
 from pathlib import Path
@@ -47,4 +51,22 @@ async def create_patient(request: Request, patient: PatientCreate = Depends(get_
         request=request,
         name="patients/list.html",
         context={"patients" : patients}
+    )
+
+@views_router.get("/patients/{patient_id}")
+def get_patient_details(patient_id: int, request: Request, db: Session = Depends(get_db)):
+    patient = db.query(Patients).filter(Patients.id == patient_id).first()
+    measurements = db.query(PatientMeasurement).filter(PatientMeasurement.patient_id == patient_id).all()
+    comorbidities = db.query(PatientComorbidity).filter(PatientComorbidity.patient_id == patient_id).all()
+    meal_plans = db.query(MealPlan).filter(MealPlan.patient_id == patient_id).all()
+
+    comorbidities_name = []
+    if comorbidities:
+        for comorbidity in comorbidities:
+            comorbidities_name.append(db.query(Comorbidities).filter(Comorbidities.id == comorbidity.comorbidity_id).first())
+
+    return templates.TemplateResponse(
+        request=request,
+        name="patients/details.html",
+        context={"patient" : patient, "comorbidities" : comorbidities_name, "measurements" : measurements, "meal_plans" : meal_plans}
     )
