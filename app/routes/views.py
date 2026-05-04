@@ -1,6 +1,6 @@
 from fastapi import APIRouter, Depends, Request
 from fastapi.templating import Jinja2Templates
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, joinedload
 from app.database import get_db
 from app.models.comorbidities import Comorbidities
 from app.models.meal_plan import MealPlan
@@ -57,16 +57,37 @@ async def create_patient(request: Request, patient: PatientCreate = Depends(get_
 def get_patient_details(patient_id: int, request: Request, db: Session = Depends(get_db)):
     patient = db.query(Patients).filter(Patients.id == patient_id).first()
     measurements = db.query(PatientMeasurement).filter(PatientMeasurement.patient_id == patient_id).all()
-    comorbidities = db.query(PatientComorbidity).filter(PatientComorbidity.patient_id == patient_id).all()
+    comorbidities = (
+        db.query(PatientComorbidity)
+        .filter(PatientComorbidity.patient_id == patient_id)
+        .options(joinedload(PatientComorbidity.comorbidity))
+        .all()
+    )
     meal_plans = db.query(MealPlan).filter(MealPlan.patient_id == patient_id).all()
 
-    comorbidities_name = []
-    if comorbidities:
-        for comorbidity in comorbidities:
-            comorbidities_name.append(db.query(Comorbidities).filter(Comorbidities.id == comorbidity.comorbidity_id).first())
 
     return templates.TemplateResponse(
         request=request,
         name="patients/details.html",
-        context={"patient" : patient, "comorbidities" : comorbidities_name, "measurements" : measurements, "meal_plans" : meal_plans}
+        context={"patient" : patient, "comorbidities" : comorbidities, "measurements" : measurements, "meal_plans" : meal_plans}
+    )
+
+@views_router.get("/patients/{patient_id}/comorbidities/edit")
+def get_patient_details(patient_id: int, request: Request, db: Session = Depends(get_db)):
+    all_comorbidities = db.query(Comorbidities).all()
+
+    patient_comorbidities = (
+        db.query(PatientComorbidity)
+        .filter(PatientComorbidity.patient_id == patient_id)
+        .options(joinedload(PatientComorbidity.comorbidity))
+        .all()
+    )
+
+    patient_comorbidities_ids = {c.comorbidity_id for c in patient_comorbidities}
+
+
+    return templates.TemplateResponse(
+        request=request,
+        name="patients/comorbidities_form.html",
+        context={"all_comorbidities" : all_comorbidities, "patient_comorbidities_ids" : patient_comorbidities_ids}
     )

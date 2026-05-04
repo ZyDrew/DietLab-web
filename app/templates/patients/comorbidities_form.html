@@ -1,0 +1,32 @@
+<!-- template/patients/comorbidities_form.html -->
+
+<div class="modal-header bg-success text-white">
+    <h5 class="modal-title">Comorbidités</h5>
+    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+</div>
+<form   hx-post="/patients/{patient_id}/comorbidities/edit" 
+        hx-target="#manage-comorbidities-form" 
+        hx-swap="innerHTML"
+        hx-on::after-request="bootstrap.Modal.getInstance(document.getElementById('comorbiditiesModal')).hide()">
+        <div class="modal-body">
+            <div class="col-12">
+                <label class="form-label">Sélectionner les comorbidités du patient.</label>
+                <div class="d-flex gap-3 mt-1">
+                    {% for comorbidity in all_comorbidities %}
+                    <div class="form-check">
+                        <input  class="form-check-input" 
+                                type="checkbox" 
+                                name="comorbidities_ids" 
+                                value="{{ comorbidity.id }}"
+                                {% if comorbidity.id in patient_comorbidities_ids %}checked{% endif %}>
+                        <label class="form-check-label" for="male">{{ comorbidity.name }}</label>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+        <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuler</button>
+            <button type="submit" class="btn btn-success">Enregistrer</button>
+        </div>
+</form>

@@ -6,26 +6,36 @@
 {% block content %}
 
 <div id="patient-details">
-    <div id="patient-infos">
-        <label>Nom : {{ patient.lastname }}</label>
-        <label>Prénom : {{ patient.firstname }}</label>
-        <label>Date de naissance : {{ patient.birthdate }}</label>
-        <label>Notes : {{ patient.notes }}</label>
+    <div class="card p-3 mb-4">
+        <div id="patient-infos" class="p-3 mb-4">
+            <p class="mb-1"><strong>Name : </strong>{{ patient.lastname }}</p>
+            <p class="mb-1"><strong>Prénom : </strong>{{ patient.firstname }}</p>
+            <p class="mb-1"><strong>Date de naissance : </strong>{{ patient.birthdate }}</p>
+            <p class="mb-1"><strong>Notes : </strong>{{ patient.notes }}</p>
+        </div>
+        <div id="patient-comorbidities" class="mb-4">
+            <h5>Comorbidités</h5>
+            <ul>
+                {% for comorbidity in comorbidities %}
+                <li>{{ comorbidity.comorbidity.name }}</li>
+                {% endfor %}
+            </ul>
+            <button class="btn btn-success mb-3"
+                    hx-get="/patients/{{patient.id}}/comorbidities/edit" 
+                    hx-target="#manage-comorbidities-form"
+                    hx-swap="innerHTML"
+                    hx-on::after-request="new bootstrap.Modal(document.getElementById('comorbiditiesModal')).show()">
+                    Gérer
+            </button>
+        </div>
     </div>
-    <div id="patient-comorbidities">
-        <ul>
-            {% for comorbidity in comorbidities %}
-            <li>{{ comorbidity.name }}</li>
-            {% endfor %}
-        </ul>
-    </div>
-    <div id="patient-measurements">
+    <div id="patient-measurements" class="mb-4">
         <table class="table table-hover">
-            <caption>Mesures du patient</caption>
+            <h5>Mesures du patient</h5>
             <thead class="table-dark">
                 <tr>
-                    <th>Poids</th>
                     <th>Taille</th>
+                    <th>Poids</th>
                     <th>Date de prise</th>
                 </tr>
             </thead>
@@ -40,9 +50,9 @@
             </tbody>
         </table>
     </div>
-    <div id="patient-foodplan">
+    <div id="patient-foodplan" class="mb-4">
         <table class="table table-hover">
-            <caption>Plan alimentaire du patient</caption>
+            <h5>Plan alimentaire du patient</h5>
             <thead class="table-dark">
                 <tr>
                     <th>Numéro</th>
@@ -63,6 +73,13 @@
                 {% endfor %}
             </tbody>
         </table>
+    </div>
+</div>
+
+<!-- Form to manage comorbidities -->
+<div class="modal fade" id="comorbiditiesModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content" id="manage-comorbidities-form"></div>
     </div>
 </div>
 
