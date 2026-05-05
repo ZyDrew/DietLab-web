@@ -1,4 +1,5 @@
 from datetime import date
+from app.models.patients import Patients
 
 def calculate_age(birth_date: date) -> int:
     today = date.today()
@@ -14,3 +15,10 @@ def calculate_age(birth_date: date) -> int:
         return today.year - birth_date.year - 1
     else:
         return today.year - birth_date.year
+
+def patient_exist(patient_id: int, db):
+    patient = db.query(Patients).filter(Patients.id == patient_id).first()
+
+    if patient is None:
+        return False
+    return True

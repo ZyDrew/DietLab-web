@@ -1,7 +1,7 @@
 <!-- templates/patients/list.html -->
 
 <table class="table table-hover">
-    <thead class="table-dark">
+    <thead class="table-secondary">
         <tr>
             <th>Nom</th>
             <th>Prénom</th>
@@ -16,7 +16,7 @@
             <td>{{ patient.firstname }}</td>
             <td>{{ patient.birthdate }}</td>
             <td>
-                <a href="/patients/{{ patient.id }}" class="btn btn-sm btn-info">Voir</a>
+                <a href="/patients/{{ patient.id }}" class="btn btn-sm btn-success">Voir</a>
                 <button class="btn btn-sm btn-danger">Supprimer</button>
             </td>
         </tr>

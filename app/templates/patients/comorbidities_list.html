@@ -1,0 +1,11 @@
+<!-- template/patients/comorbidities_list.html -->
+
+{% if comorbidities %}
+<ul>
+    {% for comorbidity in comorbidities %}
+    <li>{{ comorbidity.comorbidity.name }}</li>
+    {% endfor %}
+</ul>
+{% else %}
+<p>Aucune</p>
+{% endif %}
