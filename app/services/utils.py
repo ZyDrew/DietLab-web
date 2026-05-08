@@ -20,5 +20,5 @@ def patient_exist(patient_id: int, db):
     patient = db.query(Patients).filter(Patients.id == patient_id).first()
 
     if patient is None:
-        return False
-    return True
+        return None
+    return patient

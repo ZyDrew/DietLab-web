@@ -4,14 +4,17 @@ from fastapi import APIRouter, Depends, Form, HTTPException, Request
 from fastapi.templating import Jinja2Templates
 from sqlalchemy.orm import Session, joinedload
 from app.database import get_db
+from app.dependencies.measurement_form import get_measurement_form
 from app.models.comorbidities import Comorbidities
 from app.models.meal_plan import MealPlan
 from app.models.patient_comorbidity import PatientComorbidity
 from app.models.patients import Patients
 from app.models.patient_measurement import PatientMeasurement
+from app.schemas.patient_measurement import PatientMeasurementCreate
 from app.schemas.patients import PatientCreate
 from app.dependencies.patient_form import get_patient_form
 from pathlib import Path
+from datetime import date
 
 from app.services.utils import patient_exist
 
@@ -27,6 +30,10 @@ def dashboard(request: Request):
         request=request,
         name="dashboard.html"
     )
+
+############################
+########  PATIENTS  ########
+############################
 
 @views_router.get("/patients")
 def get_all_patients(request: Request, db: Session = Depends(get_db)):
@@ -79,6 +86,10 @@ def get_patient_details(patient_id: int, request: Request, db: Session = Depends
         name="patients/details.html",
         context={"patient" : patient, "comorbidities" : comorbidities, "measurements" : measurements, "meal_plans" : meal_plans}
     )
+
+############################
+#####  COMORBIDITIES   #####
+############################
 
 @views_router.get("/patients/{patient_id}/comorbidities/edit")
 def manage_comorbidities(patient_id: int, request: Request, db: Session = Depends(get_db)):
@@ -140,4 +151,92 @@ async def manage_comorbidities(patient_id: int, request: Request, db: Session = 
         request=request,
         name="patients/comorbidities_list.html",
         context={"comorbidities" : comorbidities}
+    )
+
+
+############################
+######  MEASUREMENTS  ######
+############################
+
+@views_router.delete("/patients/{patient_id}/measurements/{measure_id}")
+async def delete_measurement(patient_id: int, measure_id: int, request: Request, db: Session = Depends(get_db)):
+    patient = patient_exist(patient_id, db)
+    if not patient:
+        return HTTPException(404, "le patient n'existe pas")
+
+    measure = (
+        db.query(PatientMeasurement)
+        .filter(PatientMeasurement.patient_id == patient_id)
+        .filter(PatientMeasurement.id == measure_id)
+        .first()
+    )
+
+    if not measure:
+        return HTTPException(404, "La mesure n'existe pas")
+    
+    db.delete(measure)
+    db.commit()
+
+    measurements = db.query(PatientMeasurement).filter(PatientMeasurement.patient_id == patient_id).all()
+
+    return templates.TemplateResponse(
+        request=request,
+        name="patients/measurements_tab.html",
+        context={"patient" : patient, "measurements" : measurements}
+    )
+
+@views_router.get("/patients/{patient_id}/measurements/new")
+def new_measurement_form(patient_id: int, request: Request):
+    return templates.TemplateResponse(
+        request=request,
+        name="patients/measurements_form.html",
+        context={"patient_id" : patient_id, "measure" : None, "today" : date.today()}
+    )
+
+@views_router.get("/patients/{patient_id}/measurements/{measure_id}/edit")
+def edit_measurement_form(patient_id: int, measure_id: int, request: Request, db: Session = Depends(get_db)):
+    measure = db.query(PatientMeasurement).filter(PatientMeasurement.id == measure_id).first()
+
+    if not measure:
+        return HTTPException(404, "la mesure n'existe pas pour le patient sélectionné")
+
+    return templates.TemplateResponse(
+        request=request,
+        name="patients/measurements_form.html",
+        context={"patient_id" : patient_id, "measure" : measure}
+    )
+
+@views_router.post("/patients/{patient_id}/measurements/new")
+async def create_measurement(patient_id: int, request: Request, measure: PatientMeasurementCreate = Depends(get_measurement_form), db: Session = Depends(get_db)):
+    patient = patient_exist(patient_id, db)
+    if not patient:
+        return HTTPException(404, "le patient n'existe pas")
+
+    new_measure = PatientMeasurement(patient_id=patient_id, **measure.model_dump())
+    db.add(new_measure)
+    db.commit()
+    
+    measurements = db.query(PatientMeasurement).filter(PatientMeasurement.patient_id == patient_id).all()
+
+    return templates.TemplateResponse(
+        request=request,
+        name="patients/measurements_tab.html",
+        context={"patient" : patient, "measurements" : measurements}
+    )
+
+@views_router.put("/patients/{patient_id}/measurements/{measure_id}/edit")
+async def update_measurement(patient_id: int, measure_id: int, request: Request, measure: PatientMeasurementCreate = Depends(get_measurement_form), db: Session = Depends(get_db)):
+    patient = patient_exist(patient_id, db)
+    if not patient:
+        return HTTPException(404, "Le patient n'existe pas")
+
+    db.query(PatientMeasurement).filter(PatientMeasurement.id == measure_id).update(measure.model_dump())
+    db.commit()
+
+    measurements = db.query(PatientMeasurement).filter(PatientMeasurement.patient_id == patient_id).all()
+
+    return templates.TemplateResponse(
+        request=request,
+        name="patients/measurements_tab.html",
+        context={"patient": patient, "measurements": measurements}
     )
