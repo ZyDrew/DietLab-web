@@ -16,8 +16,21 @@
             <td>{{ patient.firstname }}</td>
             <td>{{ patient.birthdate }}</td>
             <td>
-                <a href="/patients/{{ patient.id }}" class="btn btn-sm btn-success">Voir</a>
-                <button class="btn btn-sm btn-danger">Supprimer</button>
+                <a href="/patients/{{ patient.id }}" class="btn btn-sm btn-info">Détails</a>
+                <button hx-get="/patients/{{ patient.id }}/edit"
+                        hx-target="#patient-form"
+                        hx-swap="innerHTML"
+                        hx-on::after-request="new bootstrap.Modal(document.getElementById('patientModal')).show()"
+                        class="btn btn-sm btn-success">
+                    Modifier
+                </button>
+                <button hx-get="/patients/{{ patient.id }}/delete" 
+                        hx-target="#confirmation-popup-patient-deletion"
+                        hx-swap="innerHTML"
+                        hx-on::after-request="new bootstrap.Modal(document.getElementById('ConfirmationPatientModal')).show()"
+                        class="btn btn-sm btn-danger">
+                    Supprimer
+                </button>
             </td>
         </tr>
         {% endfor %}

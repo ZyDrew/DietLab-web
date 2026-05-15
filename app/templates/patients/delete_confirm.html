@@ -1,0 +1,19 @@
+<!-- templates/patients/delete_confirm.hmtl -->
+
+<div class="modal-header bg-success text-white">
+    <h5 class="modal-title">Supprimer un patient</h5>
+    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+</div>
+<form   hx-delete="/patients/{{ patient.id }}/delete"
+        hx-target="#patient-list"
+        hx-swap="innerHTML"
+        hx-on::after-request="bootstrap.Modal.getInstance(document.getElementById('ConfirmationPatientModal')).hide()">
+        <div class="modal-body">
+            <h5><strong>Êtes-vous sûr ?</strong></h5>
+            <p>Le patient <strong>{{ patient.lastname }} {{ patient.firstname }}</strong> sera supprimé ainsi que toutes les informations liées. (Mesures, plans alimentaire, etc.)</p>
+        </div>
+        <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Non</button>
+            <button type="submit" class="btn btn-danger">Oui</button>
+        </div>
+</form>

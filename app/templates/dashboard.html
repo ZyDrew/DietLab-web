@@ -6,7 +6,7 @@
 
 <button class="btn btn-success mb-3"
         hx-get="/patients/new" 
-        hx-target="#create-patient-form"
+        hx-target="#patient-form"
         hx-swap="innerHTML"
         hx-on::after-request="new bootstrap.Modal(document.getElementById('patientModal')).show()">
     Nouveau patient
@@ -19,10 +19,17 @@
     hx-swap="innerHTML">
 </div>
 
-<!-- Form to create a patient -->
+<!-- Form to create/modify a patient -->
 <div class="modal fade" id="patientModal" tabindex="-1">
     <div class="modal-dialog">
-        <div class="modal-content" id="create-patient-form"></div>
+        <div class="modal-content" id="patient-form"></div>
+    </div>
+</div>
+
+<!-- Confirmation popup to delete a patient -->
+<div class="modal fade" id="ConfirmationPatientModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content" id="confirmation-popup-patient-deletion"></div>
     </div>
 </div>
 

@@ -48,7 +48,8 @@ def get_all_patients(request: Request, db: Session = Depends(get_db)):
 def new_patient_form(request: Request):
     return templates.TemplateResponse(
         request=request,
-        name="patients/form.html"
+        name="patients/form.html",
+        context={"edit" : None}
     )
 
 @views_router.post("/patients/new")
@@ -86,6 +87,82 @@ def get_patient_details(patient_id: int, request: Request, db: Session = Depends
         name="patients/details.html",
         context={"patient" : patient, "comorbidities" : comorbidities, "measurements" : measurements, "meal_plans" : meal_plans}
     )
+
+@views_router.get("/patients/{patient_id}/edit")
+def edit_patient_form(patient_id: int, request: Request, db: Session = Depends(get_db)):
+    patient = patient_exist(patient_id, db)
+    if not patient:
+        return HTTPException(404, "Le patient n'existe pas")
+    
+    return templates.TemplateResponse(
+        request=request,
+        name="patients/form.html",
+        context={"patient" : patient, "edit" : True}
+    )
+
+@views_router.put("/patients/{patient_id}/edit")
+async def update_patient(patient_id: int, request: Request, edit_patient: PatientCreate = Depends(get_patient_form), db: Session = Depends(get_db)):
+    if not patient_exist(patient_id, db):
+        return HTTPException(404, "Le patient n'existe pas")
+    
+    db.query(Patients).filter(Patients.id == patient_id).update(edit_patient.model_dump())
+    db.commit()
+
+    patients = db.query(Patients).all()
+
+    return templates.TemplateResponse(
+        request=request,
+        name="patients/list.html",
+        context={"patients" : patients}
+    )
+
+@views_router.get("/patients/{patient_id}/delete")
+def get_patient_delete_popup(patient_id: int, request: Request, db: Session = Depends(get_db)):
+    patient = patient_exist(patient_id, db)
+
+    if not patient:
+        return HTTPException(404, "Le patient n'existe pas")
+
+    return templates.TemplateResponse(
+        request=request,
+        name="/patients/delete_confirm.html",
+        context={"patient" : patient}
+    )
+
+@views_router.delete("/patients/{patient_id}/delete")
+async def delete_patient(patient_id: int, request: Request, db: Session = Depends(get_db)):
+    patient = patient_exist(patient_id, db)
+
+    if not patient:
+        return HTTPException(404, "Le patient n'existe pas")
+    
+    #get all measurements + delete
+    measurements = db.query(PatientMeasurement).filter(PatientMeasurement.patient_id == patient_id).all()
+    for measure in measurements:
+        db.delete(measure)
+    
+    #get all comorbidities + delete
+    comorbidities = db.query(PatientComorbidity).filter(PatientComorbidity.patient_id == patient_id).all()
+    for comorbidity in comorbidities:
+        db.delete(comorbidity)
+    
+    #get all meal plan + delete
+    meal_plans = db.query(MealPlan).filter(MealPlan.patient_id == patient_id).all()
+
+    for item in meal_plans:
+        db.delete(item)
+
+    db.delete(patient)
+
+    db.commit()
+
+    patients = db.query(Patients).all()
+    return templates.TemplateResponse(
+        request=request,
+        name="patients/list.html",
+        context={"patients" : patients}
+    )
+
 
 ############################
 #####  COMORBIDITIES   #####

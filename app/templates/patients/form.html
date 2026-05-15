@@ -1,10 +1,12 @@
 <!-- templates/patients/form.html -->
 
 <div class="modal-header bg-success text-white">
-    <h5 class="modal-title">Nouveau patient</h5>
+    <h5 class="modal-title">{% if edit %}Modification du patient{% else %}Nouveau patient{% endif %}</h5>
     <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
 </div>
-<form   hx-post="/patients/new" 
+<form   {% if edit %}   hx-put="patients/{{ patient.id }}/edit"
+        {% else %}      hx-post="/patients/new" 
+        {% endif %}
         hx-target="#patient-list" 
         hx-swap="innerHTML"
         hx-on::after-request="bootstrap.Modal.getInstance(document.getElementById('patientModal')).hide()">
@@ -12,32 +14,38 @@
             <div class="row g-3">
                 <div class="col-md-6">
                     <label class="form-label">Nom</label>
-                    <input type="text" class="form-control" name="lastname" placeholder="Dupont...">
+                    <input type="text" class="form-control" name="lastname" placeholder="Dupont..." value="{{ patient.lastname if edit else '' }}">
                 </div>
                 <div class="col-md-6">
                     <label class="form-label">Prénom</label>
-                    <input type="text" class="form-control" name="firstname" placeholder="Jean...">
+                    <input type="text" class="form-control" name="firstname" placeholder="Jean..." value="{{ patient.firstname if edit else '' }}">
                 </div>
                 <div class="col-12">
                     <label class="form-label">Date de naissance</label>
-                    <input type="date" class="form-control" name="birthdate">
+                    <input type="date" class="form-control" name="birthdate" value="{{ patient.birthdate if edit else '' }}">
                 </div>
                 <div class="col-12">
                     <label class="form-label">Sexe</label>
                     <div class="d-flex gap-3 mt-1">
                         <div class="form-check">
-                            <input class="form-check-input" type="radio" name="gender" value="male" id="male">
+                            <input  class="form-check-input" type="radio" name="gender" value="male" id="male" 
+                                    {% if edit %} 
+                                        {% if patient.gender == 'male' %}checked{% endif %}
+                                    {% endif %}>
                             <label class="form-check-label" for="male">Homme</label>
                         </div>
                         <div class="form-check">
-                            <input class="form-check-input" type="radio" name="gender" value="female" id="female">
+                            <input  class="form-check-input" type="radio" name="gender" value="female" id="female"
+                                    {% if edit %} 
+                                        {% if patient.gender == 'female' %}checked{% endif %}
+                                    {% endif %}>
                             <label class="form-check-label" for="female">Femme</label>
                         </div>
                     </div>
                 </div>
                 <div class="col-12">
                     <label class="form-label">Notes</label>
-                    <textarea class="form-control" name="notes" rows="2" placeholder="Informations complémentaires..."></textarea>
+                    <textarea class="form-control" name="notes" rows="2" placeholder="Informations complémentaires...">{{ patient.notes if edit else '' }}</textarea>
                 </div>
             </div>
         </div>
