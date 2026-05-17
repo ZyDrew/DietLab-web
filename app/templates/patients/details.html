@@ -59,7 +59,7 @@
                     <tr>
                         <th>Numéro</th>
                         <th>Date de début</th>
-                        <th>Actions</th>
+                        <th style="width: 100px;">Action</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -68,8 +68,8 @@
                         <td>{{ meal_plan.id }}</td>
                         <td>{{ meal_plan.start_date }}</td>
                         <td>
-                            <a href="/meal_plan/{{ meal_plan.id }}" class="btn btn-sm btn-info">Détails</a>
-                            <button class="btn btn-sm btn-danger">Supprimer</button>
+                            <a href="/meal_plan/{{ meal_plan.id }}" class="btn btn-sm btn-info"><i class="bi bi-eye"></i></a>
+                            <button class="btn btn-sm btn-danger"><i class="bi bi-trash"></i></button>
                         </td>
                     </tr>
                     {% endfor %}

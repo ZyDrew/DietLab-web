@@ -4,7 +4,7 @@
     <h5 class="modal-title">{% if edit %}Modification du patient{% else %}Nouveau patient{% endif %}</h5>
     <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
 </div>
-<form   {% if edit %}   hx-put="patients/{{ patient.id }}/edit"
+<form   {% if edit %}   hx-put="/patients/{{ patient.id }}/edit"
         {% else %}      hx-post="/patients/new" 
         {% endif %}
         hx-target="#patient-list" 

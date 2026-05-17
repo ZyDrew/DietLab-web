@@ -3,12 +3,13 @@
 <div id="measurements-table" class="card mb-4 border-0 shadow-sm">
     <h6 class="mb-2 p-1">
         Mesures du patient
-        <button class="btn btn-sm btn-success"
+        <button class="btn btn-success rounded-circle"
+                style="width: 28px; height: 28px; padding: 0"
                 hx-get="/patients/{{ patient.id }}/measurements/new" 
                 hx-target="#manage-measurements-form"
                 hx-swap="innerHTML"
                 hx-on::after-request="new bootstrap.Modal(document.getElementById('measurementsModal')).show()">
-            Ajouter
+            <i class="bi bi-plus text-white"></i>
         </button>
     </h6>
     <div class="card-body p-0">
@@ -18,7 +19,7 @@
                     <th>Taille</th>
                     <th>Poids</th>
                     <th>Date de prise</th>
-                    <th>Action</th>
+                    <th style="width: 100px;">Action</th>
                 </tr>
             </thead>
             <tbody>
@@ -33,13 +34,13 @@
                                 hx-swap="innerHTML"
                                 hx-on::after-request="new bootstrap.Modal(document.getElementById('measurementsModal')).show()"
                                 class="btn btn-sm btn-success">
-                            Modifier
+                            <i class="bi bi-pencil"></i>
                         </button>
                         <button hx-delete="/patients/{{ patient.id }}/measurements/{{ measure.id }}" 
                                 hx-target="#measurements-table"
                                 hx-swap="outerHTML"
                                 class="btn btn-sm btn-danger">
-                            Supprimer
+                            <i class="bi bi-trash"></i>
                         </button>
                     </td>
                 </tr>

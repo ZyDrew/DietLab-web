@@ -7,6 +7,7 @@ from app.database import get_db
 from app.dependencies.measurement_form import get_measurement_form
 from app.models.comorbidities import Comorbidities
 from app.models.meal_plan import MealPlan
+from app.models.meal_plan_food import MealPlanFood
 from app.models.patient_comorbidity import PatientComorbidity
 from app.models.patients import Patients
 from app.models.patient_measurement import PatientMeasurement
@@ -146,10 +147,13 @@ async def delete_patient(patient_id: int, request: Request, db: Session = Depend
     for comorbidity in comorbidities:
         db.delete(comorbidity)
     
-    #get all meal plan + delete
+    #get all meal plan & foods related + delete
     meal_plans = db.query(MealPlan).filter(MealPlan.patient_id == patient_id).all()
 
     for item in meal_plans:
+        meal_plan_foods = db.query(MealPlanFood).filter(MealPlanFood.plan_id == item.id).all()
+        for food in meal_plan_foods:
+            db.delete(food)
         db.delete(item)
 
     db.delete(patient)
