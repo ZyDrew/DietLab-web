@@ -17,6 +17,7 @@ from app.dependencies.patient_form import get_patient_form
 from pathlib import Path
 from datetime import date
 
+from app.services.nutritions import calculate_macro
 from app.services.utils import patient_exist
 
 views_router = APIRouter()
@@ -320,4 +321,33 @@ async def update_measurement(patient_id: int, measure_id: int, request: Request,
         request=request,
         name="patients/measurements_tab.html",
         context={"patient": patient, "measurements": measurements}
+    )
+
+
+############################
+######   MEAL PLAN   #######
+############################
+
+@views_router.get("/meal_plans/{meal_plan_id}")
+def get_meal_plan_details(meal_plan_id: int, request: Request, db: Session = Depends(get_db)):
+    meal_plan = db.query(MealPlan).filter(MealPlan.id == meal_plan_id).first()
+
+    if not meal_plan:
+        return HTTPException(404, "Le plan alimentaire n'existe pas")
+    
+    patient = db.query(Patients).filter(Patients.id == meal_plan.patient_id).first()
+
+    meal_plan_foods = (
+        db.query(MealPlanFood)
+        .filter(MealPlanFood.plan_id == meal_plan_id)
+        .options(joinedload(MealPlanFood.food))
+        .all()
+    )
+
+    foods, total = calculate_macro(meal_plan_foods)
+
+    return templates.TemplateResponse(
+        request=request,
+        name="meal_plans/details.html",
+        context={"patient" : patient, "plan" : meal_plan, "foods" : foods, "total" : total}
     )

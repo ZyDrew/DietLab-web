@@ -53,15 +53,25 @@ def calculate_bmi(height: float, weight: float):
     
 def calculate_macro(meal_plan_foods: list):
     result = []
+    total = {
+        "calories" : 0,
+        "proteins" : 0,
+        "fat" : 0,
+        "carbs" : 0,
+        "calcium" : 0,
+        "iron" : 0,
+        "vitamin_c" : 0
+    }
 
     for item in meal_plan_foods:
         factor = (item.quantity / 100) * (item.frequency / 7)
-        
-        result.append({
+
+        food = {
             "food_name": item.food.name,
             "quantity": item.quantity,
             "frequency": item.frequency,
-            "period": item.period,
+            "period": item.period.value,
+            "period_label": item.period.label,
             "calories": round(float(item.food.calories) * factor, 2),
             "proteins": round(float(item.food.proteins) * factor, 2),
             "fat": round(float(item.food.fat) * factor, 2),
@@ -69,6 +79,16 @@ def calculate_macro(meal_plan_foods: list):
             "calcium": round(float(item.food.calcium) * factor, 2),
             "iron": round(float(item.food.iron) * factor, 2),
             "vitamin_c": round(float(item.food.vitamin_c) * factor, 2)
-        })
+        }
+        
+        result.append(food)
+
+        total["calories"] += food["calories"]
+        total["proteins"] += food["proteins"]
+        total["fat"] += food["fat"]
+        total["carbs"] += food["carbs"]
+        total["calcium"] += food["calcium"]
+        total["iron"] += food["iron"]
+        total["vitamin_c"] += food["vitamin_c"]
     
-    return {"foods" : result}
+    return result, total

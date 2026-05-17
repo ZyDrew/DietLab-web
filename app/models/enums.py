@@ -25,3 +25,15 @@ class MealPlanEnum(str, Enum):
     AFTERNOON_SNACK = "afternoon_snack" #Collation de l'après-midi / goûter (4pm-16h)
     DINNER = "dinner"                   #Souper / supper
     EVENING_SNACK = "evening_snack"     #Collation du soir (10pm~ - 22h)
+
+    @property
+    def label(self):
+        labels = {
+            "breakfast": "Petit déjeuner",
+            "morning_snack": "Collation matin",
+            "lunch": "Déjeuner",
+            "afternoon_snack": "Collation après-midi",
+            "dinner": "Dîner",
+            "evening_snack": "Collation soir"
+        }
+        return labels[self.value]
