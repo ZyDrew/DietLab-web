@@ -91,4 +91,6 @@ def calculate_macro(meal_plan_foods: list):
         total["iron"] += food["iron"]
         total["vitamin_c"] += food["vitamin_c"]
     
+    total = {k: round(v, 2) for k, v in total.items()}
+    
     return result, total

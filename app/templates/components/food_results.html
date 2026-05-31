@@ -1,0 +1,8 @@
+{% for food in foods %}
+<button type="button" 
+        class="list-group-item list-group-item-action"
+        data-food-id="{{ food.id }}"
+        data-food-name="{{ food.name }}">
+    {{ food.name }}
+</button>
+{% endfor %}

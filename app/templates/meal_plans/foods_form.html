@@ -1,0 +1,97 @@
+<!-- templates/meal_plans/foods_form.html -->
+
+<div class="modal-header bg-success text-white">
+    <h5 class="modal-title">Nouvel aliment</h5>
+    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+</div>
+<form   hx-post="/meal_plans/{{ meal_plan_id }}/foods/new" 
+        hx-target="#meal-plan-table" 
+        hx-swap="innerHTML"
+        hx-on::after-request="if(event.detail.pathInfo.requestPath.includes('/foods/new')) bootstrap.Modal.getInstance(document.getElementById('foodsModal')).hide()">
+    <div class="modal-body" style="overflow: visible;">
+        <div class="row g-3">
+            <!-- Research bar for foods -->
+            <div class="col-12" style="position: relative;">
+                <label class="form-label">Aliment</label>
+                <input type="text" 
+                    class="form-control" 
+                    placeholder="Rechercher un aliment..."
+                    hx-get="/foods/search"
+                    hx-trigger="keyup changed delay:300ms"
+                    hx-target="#food-results"
+                    hx-disinherit="*"
+                    hx-include="[name='food_search']"
+                    name="food_search"
+                    autocomplete="off">
+                <div id="food-results" class="list-group mt-1" style="position: absolute; z-index: 9999; width: calc(100% - 2rem); max-height: 300px; overflow-y: auto;"></div>
+                <!-- Hidden field to stock ID -->
+                <input type="hidden" name="food_id" id="selected-food-id">
+                <small id="selected-food-name" class="text-success"></small>
+            </div>
+
+            <!-- Quantity -->
+            <div class="col-md-6">
+                <label class="form-label">Quantité (g ou ml)</label>
+                <input type="number" 
+                    class="form-control" 
+                    name="quantity" 
+                    min="1" 
+                    step="1"
+                    placeholder="150">
+            </div>
+
+            <!-- Frequency -->
+            <div class="col-md-6">
+                <label class="form-label">Fréquence</label>
+                <select class="form-select" name="frequency">
+                    <option value="1">1x / semaine</option>
+                    <option value="2">2x / semaine</option>
+                    <option value="3">3x / semaine</option>
+                    <option value="4">4x / semaine</option>
+                    <option value="5">5x / semaine</option>
+                    <option value="6">6x / semaine</option>
+                    <option value="7">7x / semaine</option>
+                </select>
+            </div>
+
+            <!-- Period -->
+            <div class="col-12">
+                <label class="form-label">Période</label>
+                <select class="form-select" name="period">
+                    <option value="breakfast">Petit déjeuner</option>
+                    <option value="morning_snack">Collation matin</option>
+                    <option value="lunch">Déjeuner</option>
+                    <option value="afternoon_snack">Collation après-midi</option>
+                    <option value="dinner">Dîner</option>
+                    <option value="evening_snack">Collation soir</option>
+                </select>
+            </div>
+
+        </div>
+    </div>
+    <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuler</button>
+        <button type="submit" class="btn btn-success">Enregistrer</button>
+    </div>
+</form>
+
+<script>
+    function selectFood(id, name) {
+        document.getElementById('selected-food-id').value = id;
+        document.getElementById('selected-food-name').textContent = '✓ ' + name;
+        document.getElementById('food-results').innerHTML = '';
+        document.querySelector('[name="food_search"]').value = name;
+    }
+
+    document.addEventListener('click', function(e) {
+    const btn = e.target.closest('[data-food-id]');
+    if (btn) {
+        selectFood(btn.dataset.foodId, btn.dataset.foodName);
+    }
+    });
+</script>
+
+<style>
+.modal-content { overflow: visible; }
+.modal { overflow: auto !important; }
+</style>

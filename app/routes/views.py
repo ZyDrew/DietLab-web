@@ -1,16 +1,21 @@
 from typing import List
 
 from fastapi import APIRouter, Depends, Form, HTTPException, Request
+from fastapi.responses import HTMLResponse
 from fastapi.templating import Jinja2Templates
+from sqlalchemy import case
 from sqlalchemy.orm import Session, joinedload
 from app.database import get_db
+from app.dependencies.foods_form import get_food_form
 from app.dependencies.measurement_form import get_measurement_form
 from app.models.comorbidities import Comorbidities
+from app.models.foods import Foods
 from app.models.meal_plan import MealPlan
 from app.models.meal_plan_food import MealPlanFood
 from app.models.patient_comorbidity import PatientComorbidity
 from app.models.patients import Patients
 from app.models.patient_measurement import PatientMeasurement
+from app.schemas.meal_plan_food import MealPlanFoodCreate
 from app.schemas.patient_measurement import PatientMeasurementCreate
 from app.schemas.patients import PatientCreate
 from app.dependencies.patient_form import get_patient_form
@@ -350,4 +355,63 @@ def get_meal_plan_details(meal_plan_id: int, request: Request, db: Session = Dep
         request=request,
         name="meal_plans/details.html",
         context={"patient" : patient, "plan" : meal_plan, "foods" : foods, "total" : total}
+    )
+
+@views_router.get("/meal_plans/{meal_plan_id}/foods/new")
+def new_add_food_form(meal_plan_id: int, request: Request):
+        return templates.TemplateResponse(
+        request=request,
+        name="meal_plans/foods_form.html",
+        context={"meal_plan_id" : meal_plan_id}
+    )
+
+@views_router.get("/foods/search")
+def search_foods(food_search: str = "", db: Session = Depends(get_db)):
+    if len(food_search) < 2:
+        return HTMLResponse("")
+    
+    foods = (
+        db.query(Foods)
+        .filter(Foods.name.ilike(f"%{food_search}%"))
+        .order_by(
+            case(
+                (Foods.name.ilike(f"{food_search}%"), 0),
+                else_=1
+            ),
+            Foods.name
+        )
+        .limit(100)
+        .all()
+    )
+    
+    html = ""
+    for food in foods:
+        html += f'<button type="button" class="list-group-item list-group-item-action" onclick="selectFood({food.id}, \'{food.name}\')">{food.name}</button>'
+    
+    return HTMLResponse(html)
+
+@views_router.post("/meal_plans/{meal_plan_id}/foods/new")
+async def add_food_to_mealplan(meal_plan_id: int, request: Request, food: MealPlanFoodCreate = Depends(get_food_form), db: Session = Depends(get_db)):
+    meal_plan = db.query(MealPlan).filter(MealPlan.id == meal_plan_id).first()
+    if not meal_plan:
+        return HTTPException(404, "Le plan alimentaire n'existe pas")
+
+    meal_plan_food = MealPlanFood(plan_id=meal_plan_id, **food.model_dump())
+    
+    db.add(meal_plan_food)
+    db.commit()
+
+    meal_plan_foods = (
+        db.query(MealPlanFood)
+        .filter(MealPlanFood.plan_id == meal_plan_id)
+        .options(joinedload(MealPlanFood.food))
+        .all()
+    )
+
+    foods, total = calculate_macro(meal_plan_foods)
+
+    return templates.TemplateResponse(
+        request=request,
+        name="meal_plans/foods_table.html",
+        context={"foods" : foods, "total" : total}
     )

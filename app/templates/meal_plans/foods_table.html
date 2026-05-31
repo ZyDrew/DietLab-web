@@ -1,0 +1,53 @@
+<!-- templates/meal_plans/foods_table.html -->
+
+<table class="table table-hover mb-0 border-0 shadow-sm">
+    <thead class="table-secondary">
+        <tr>
+            <th>Nom</th>
+            <th>Quantité (g ou ml)</th>
+            <th>Fréquence (j/sem)</th>
+            <th>Calories (kcal)</th>
+            <th>Protéines (g)</th>
+            <th>Glucides (g)</th>
+            <th>Lipides (g)</th>
+            <th>Calcium (mg)</th>
+            <th>Fer (mg)</th>
+            <th>Vitamin-C (mg)</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for period, items in foods|groupby('period') %}
+            <tr class="table-secondary">
+                <td colspan="10"><strong>{{ items[0]['period_label'] }}</strong></td>
+            </tr>
+            {% for item in items %}
+            <tr>
+                <td>{{ item.food_name }}</td>
+                <td>{{ item.quantity }}</td>
+                <td>{{ item.frequency }}x/sem</td>
+                <td>{{ item.calories }}</td>
+                <td>{{ item.proteins }}</td>
+                <td>{{ item.fat }}</td>
+                <td>{{ item.carbs }}</td>
+                <td>{{ item.calcium }}</td>
+                <td>{{ item.iron }}</td>
+                <td>{{ item.vitamin_c }}</td>
+            </tr>
+            {% endfor %}
+        {% endfor %}
+    </tbody>
+    <tfoot>
+        <tr class="table-secondary fw-bold">
+            <th>Total</th>
+            <td></td>
+            <td></td>
+            <td>{{ total["calories"] }}</td>
+            <td>{{ total["proteins"] }}</td>
+            <td>{{ total["fat"] }}</td>
+            <td>{{ total["carbs"] }}</td>
+            <td>{{ total["calcium"] }}</td>
+            <td>{{ total["iron"] }}</td>
+            <td>{{ total["vitamin_c"] }}</td>
+        </tr>
+    </tfoot>
+</table>
