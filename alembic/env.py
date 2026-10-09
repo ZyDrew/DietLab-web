@@ -1,16 +1,25 @@
 from logging.config import fileConfig
 
-from sqlalchemy import engine_from_config
-from sqlalchemy import pool
+from sqlalchemy import engine_from_config, pool
 
+import os
 from alembic import context
+from dotenv import load_dotenv
 
 from app.database import Base
-from app.models import patients, patient_measurement, patient_comorbidity, meal_plan, meal_plan_food, foods, recipe_food, recipes, comorbidities, appointments
+from app.models import (
+    patients, foods, recipes, comorbidities, appointments,
+    patient_measurement, patient_comorbidity,
+    meal_plan, meal_plan_food, recipe_food,
+)
 
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.
 config = context.config
+
+# Get the Postgresql DB URL from .env 
+load_dotenv(os.path.join(os.path.dirname(os.path.dirname(__file__)), "app", ".env"))
+config.set_main_option("sqlalchemy.url", os.getenv("DATABASE_URL"))
 
 # Interpret the config file for Python logging.
 # This line sets up loggers basically.

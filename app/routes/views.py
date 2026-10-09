@@ -144,23 +144,21 @@ async def delete_patient(patient_id: int, request: Request, db: Session = Depend
         return HTTPException(404, "Le patient n'existe pas")
     
     #get all measurements + delete
-    measurements = db.query(PatientMeasurement).filter(PatientMeasurement.patient_id == patient_id).all()
-    for measure in measurements:
-        db.delete(measure)
+    db.query(PatientMeasurement).filter(PatientMeasurement.patient_id == patient_id).delete()
     
     #get all comorbidities + delete
-    comorbidities = db.query(PatientComorbidity).filter(PatientComorbidity.patient_id == patient_id).all()
-    for comorbidity in comorbidities:
-        db.delete(comorbidity)
+    comorbidities = db.query(PatientComorbidity).filter(PatientComorbidity.patient_id == patient_id).delete()
     
     #get all meal plan & foods related + delete
     meal_plans = db.query(MealPlan).filter(MealPlan.patient_id == patient_id).all()
 
-    for item in meal_plans:
-        meal_plan_foods = db.query(MealPlanFood).filter(MealPlanFood.plan_id == item.id).all()
-        for food in meal_plan_foods:
-            db.delete(food)
-        db.delete(item)
+    for plan in meal_plans:
+        db.query(MealPlanFood).filter(MealPlanFood.plan_id == plan.id).delete()
+    db.flush()
+
+    for plan in meal_plans:
+        db.delete(plan)
+    db.flush()
 
     db.delete(patient)
 

@@ -1,8 +1,8 @@
 """initial schema
 
-Revision ID: 35618af555c5
+Revision ID: e4e3b742941a
 Revises: 
-Create Date: 2026-04-20 15:04:42.387170
+Create Date: 2026-10-09 17:10:42.976138
 
 """
 from typing import Sequence, Union
@@ -12,7 +12,7 @@ import sqlalchemy as sa
 
 
 # revision identifiers, used by Alembic.
-revision: str = '35618af555c5'
+revision: str = 'e4e3b742941a'
 down_revision: Union[str, Sequence[str], None] = None
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
@@ -28,14 +28,14 @@ def upgrade() -> None:
     )
     op.create_table('foods',
     sa.Column('id', sa.Integer(), nullable=False),
-    sa.Column('name', sa.String(length=100), nullable=False),
-    sa.Column('calories', sa.Numeric(precision=6, scale=2), nullable=False),
-    sa.Column('proteins', sa.Numeric(precision=6, scale=2), nullable=False),
-    sa.Column('fat', sa.Numeric(precision=6, scale=2), nullable=False),
-    sa.Column('carbs', sa.Numeric(precision=6, scale=2), nullable=False),
-    sa.Column('calcium', sa.Numeric(precision=6, scale=2), nullable=False),
-    sa.Column('iron', sa.Numeric(precision=6, scale=2), nullable=False),
-    sa.Column('vitamin_c', sa.Numeric(precision=6, scale=2), nullable=False),
+    sa.Column('name', sa.String(length=300), nullable=False),
+    sa.Column('calories', sa.Numeric(precision=10, scale=2), nullable=False),
+    sa.Column('proteins', sa.Numeric(precision=10, scale=2), nullable=False),
+    sa.Column('fat', sa.Numeric(precision=10, scale=2), nullable=False),
+    sa.Column('carbs', sa.Numeric(precision=10, scale=2), nullable=False),
+    sa.Column('calcium', sa.Numeric(precision=10, scale=2), nullable=False),
+    sa.Column('iron', sa.Numeric(precision=10, scale=2), nullable=False),
+    sa.Column('vitamin_c', sa.Numeric(precision=10, scale=2), nullable=False),
     sa.PrimaryKeyConstraint('id')
     )
     op.create_table('patients',
@@ -82,7 +82,7 @@ def upgrade() -> None:
     sa.Column('patient_id', sa.Integer(), nullable=False),
     sa.Column('height', sa.Numeric(precision=6, scale=2), nullable=False),
     sa.Column('weight', sa.Numeric(precision=6, scale=2), nullable=False),
-    sa.Column('record_date', sa.Date(), server_default=sa.text('(CURRENT_DATE)'), nullable=False),
+    sa.Column('record_date', sa.Date(), server_default=sa.text('CURRENT_DATE'), nullable=False),
     sa.ForeignKeyConstraint(['patient_id'], ['patients.id'], ),
     sa.PrimaryKeyConstraint('id')
     )

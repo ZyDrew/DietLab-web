@@ -17,6 +17,13 @@ My goal is to provide a robust web application specifically for the daily needs 
 
 ## Quick Start
 
+```
+docker start dietlab-db
+alembic upgrade head
+python -m app.seed_foods
+uvicorn app.main:app --reload
+```
+
 ## Usage
 
 ## Contributing
