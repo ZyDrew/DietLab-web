@@ -3,7 +3,7 @@ from typing import List
 from fastapi import APIRouter, Depends, Form, HTTPException, Request
 from fastapi.responses import HTMLResponse
 from fastapi.templating import Jinja2Templates
-from sqlalchemy import case
+from sqlalchemy import case, func
 from sqlalchemy.orm import Session, joinedload
 from app.database import get_db
 from app.dependencies.foods_form import get_food_form
@@ -15,6 +15,8 @@ from app.models.meal_plan_food import MealPlanFood
 from app.models.patient_comorbidity import PatientComorbidity
 from app.models.patients import Patients
 from app.models.patient_measurement import PatientMeasurement
+from app.schemas.meal_plan import MealPlanCreate
+from app.dependencies.meal_plans_form import get_meal_plans_form
 from app.schemas.meal_plan_food import MealPlanFoodCreate
 from app.schemas.patient_measurement import PatientMeasurementCreate
 from app.schemas.patients import PatientCreate
@@ -24,6 +26,7 @@ from datetime import date
 
 from app.services.nutritions import calculate_macro
 from app.services.utils import patient_exist
+from app.services.meal_plans import get_patient_meal_plans
 
 views_router = APIRouter()
 templates = Jinja2Templates(directory=Path("app") / "templates")
@@ -86,8 +89,8 @@ def get_patient_details(patient_id: int, request: Request, db: Session = Depends
         .options(joinedload(PatientComorbidity.comorbidity))
         .all()
     )
-    meal_plans = db.query(MealPlan).filter(MealPlan.patient_id == patient_id).all()
 
+    meal_plans = get_patient_meal_plans(db, patient_id)
 
     return templates.TemplateResponse(
         request=request,
@@ -171,18 +174,42 @@ async def delete_patient(patient_id: int, request: Request, db: Session = Depend
         context={"patients" : patients}
     )
 
+##########################
+### PATIENT MEAL PLANS ###
+##########################
+
+@views_router.get("/patients/{patient_id}/meal_plans/new")
+def new_meal_plans_form(patient_id: int, request: Request):
+    return templates.TemplateResponse(
+        request=request,
+        name="patients/meal_plans_form.html",
+        context={"patient_id" : patient_id}
+    )
+
 @views_router.post("/patients/{patient_id}/meal_plans/new")
-async def create_new_meal_plan(patient_id: int, request: Request, db: Session = Depends(get_db)):
+async def create_new_meal_plan(patient_id: int, request: Request, meal_plan: MealPlanCreate = Depends(get_meal_plans_form), db: Session = Depends(get_db)):
     patient = db.query(Patients).filter(Patients.id == patient_id).first()
         
     if patient is None:
         return HTTPException(404, "Le patient n'existe pas")
 
-    meal_plan = MealPlan(patient_id=patient_id, start_date=date.today())
-    db.add(meal_plan)
+    next_number = (
+        db.query(func.max(MealPlan.number))
+        .filter(MealPlan.patient_id == patient_id)
+        .scalar() or 0
+    ) + 1
+
+    new_meal_plan = MealPlan(
+        patient_id=patient_id, 
+        start_date=date.today(),
+        number=next_number,
+        name=meal_plan.name,
+        goal=meal_plan.goal)
+    
+    db.add(new_meal_plan)
     db.commit()
 
-    meal_plans = db.query(MealPlan).filter(MealPlan.patient_id == patient_id).all()
+    meal_plans = get_patient_meal_plans(db, patient_id)
 
     return templates.TemplateResponse(
         request=request,
@@ -197,15 +224,16 @@ async def delete_meal_plan(patient_id: int, meal_plan_id: int, request: Request,
     if patient is None:
         return HTTPException(404, "Le patient n'existe pas")
 
-    meal_plan = db.query(MealPlan).filter(MealPlan.id == meal_plan_id).first()
+    meal_plan = db.query(MealPlan).filter(MealPlan.id == meal_plan_id, MealPlan.patient_id == patient_id).first()
 
     if meal_plan is None:
         return HTTPException(404, "Le plan alimentaire n'existe pas")
 
+    db.query(MealPlanFood).filter(MealPlanFood.plan_id == meal_plan_id).delete()
     db.delete(meal_plan)
     db.commit()
 
-    meal_plans = db.query(MealPlan).filter(MealPlan.patient_id == patient_id).all()
+    meal_plans = get_patient_meal_plans(db, patient_id)
 
     return templates.TemplateResponse(
         request=request,

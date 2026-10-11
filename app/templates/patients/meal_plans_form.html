@@ -1,0 +1,28 @@
+<!-- template/patients/meal_plans_form.html -->
+
+<div class="modal-header bg-success text-white">
+    <h5 class="modal-title">Plan alimentaire</h5>
+    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+</div>
+<form   hx-post="/patients/{{ patient_id }}/meal_plans/new"
+        hx-target="#meal-plans-table" 
+        hx-swap="innerHTML"
+        hx-on::after-request="bootstrap.Modal.getInstance(document.getElementById('mealplansModal')).hide()">
+        <div class="modal-body">
+            <div class="row g-3">
+                <label class="form-label">Entrer les informations.</label>
+                <div class="col-md-6">
+                    <label class="form-label">Nom</label>
+                    <input type="text" class="form-control" name="name" placeholder="Plan pour perte">
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label">Objectif</label>
+                    <input type="text" class="form-control" name="goal" placeholder="Perte de poids">
+                </div>
+            </div>
+        </div>
+        <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuler</button>
+            <button type="submit" class="btn btn-success">Enregistrer</button>
+        </div>
+</form>
