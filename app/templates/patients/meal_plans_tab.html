@@ -1,0 +1,40 @@
+<div id="meal-plans-table" class="card mb-4 border-0 shadow-sm">
+    <h6 class="mb-2 p-1">
+        Plans alimentaires
+        <button class="btn btn-success rounded-circle"
+                style="width: 28px; height: 28px; padding: 0"
+                hx-post="/patients/{{ patient.id }}/meal_plans/new" 
+                hx-target="#meal-plans-table"
+                hx-swap="outerHTML">
+            <i class="bi bi-plus text-white"></i>
+        </button>
+    </h6>
+    <div class="card-body p-0">
+        <table class="table table-hover mb-0">
+            <thead class="table-secondary">
+                <tr>
+                    <th>Numéro</th>
+                    <th>Date de début</th>
+                    <th style="width: 100px;">Action</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for meal_plan in meal_plans %}
+                <tr>
+                    <td>{{ meal_plan.id }}</td>
+                    <td>{{ meal_plan.start_date }}</td>
+                    <td>
+                        <a href="/meal_plans/{{ meal_plan.id }}" class="btn btn-sm btn-info"><i class="bi bi-eye"></i></a>
+                        <button hx-delete="/patients/{{ patient.id }}/meal_plans/{{ meal_plan.id }}" 
+                                hx-target="#meal-plans-table"
+                                hx-swap="outerHTML"
+                                class="btn btn-sm btn-danger">
+                            <i class="bi bi-trash"></i>
+                        </button>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>

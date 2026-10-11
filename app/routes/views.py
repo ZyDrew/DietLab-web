@@ -171,6 +171,48 @@ async def delete_patient(patient_id: int, request: Request, db: Session = Depend
         context={"patients" : patients}
     )
 
+@views_router.post("/patients/{patient_id}/meal_plans/new")
+async def create_new_meal_plan(patient_id: int, request: Request, db: Session = Depends(get_db)):
+    patient = db.query(Patients).filter(Patients.id == patient_id).first()
+        
+    if patient is None:
+        return HTTPException(404, "Le patient n'existe pas")
+
+    meal_plan = MealPlan(patient_id=patient_id, start_date=date.today())
+    db.add(meal_plan)
+    db.commit()
+
+    meal_plans = db.query(MealPlan).filter(MealPlan.patient_id == patient_id).all()
+
+    return templates.TemplateResponse(
+        request=request,
+        name="patients/meal_plans_tab.html",
+        context={"patient" : patient, "meal_plans" : meal_plans}
+    )  
+
+@views_router.delete("/patients/{patient_id}/meal_plans/{meal_plan_id}")
+async def delete_meal_plan(patient_id: int, meal_plan_id: int, request: Request, db: Session = Depends(get_db)):
+    patient = db.query(Patients).filter(Patients.id == patient_id).first()
+        
+    if patient is None:
+        return HTTPException(404, "Le patient n'existe pas")
+
+    meal_plan = db.query(MealPlan).filter(MealPlan.id == meal_plan_id).first()
+
+    if meal_plan is None:
+        return HTTPException(404, "Le plan alimentaire n'existe pas")
+
+    db.delete(meal_plan)
+    db.commit()
+
+    meal_plans = db.query(MealPlan).filter(MealPlan.patient_id == patient_id).all()
+
+    return templates.TemplateResponse(
+        request=request,
+        name="patients/meal_plans_tab.html",
+        context={"patient" : patient, "meal_plans" : meal_plans}
+    )      
+
 
 ############################
 #####  COMORBIDITIES   #####
@@ -325,7 +367,6 @@ async def update_measurement(patient_id: int, measure_id: int, request: Request,
         name="patients/measurements_tab.html",
         context={"patient": patient, "measurements": measurements}
     )
-
 
 ############################
 ######   MEAL PLAN   #######
