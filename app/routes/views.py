@@ -34,6 +34,7 @@ templates = Jinja2Templates(directory=Path("app") / "templates")
 #Why Request class ? as it is not use in the API_Router
 #Because Jinja2 needs it to generate correct URL and to be aware on which server it is running
 
+#Get Home - Main page - dashboard
 @views_router.get("/")
 def dashboard(request: Request):
     return templates.TemplateResponse(
@@ -45,6 +46,7 @@ def dashboard(request: Request):
 ########  PATIENTS  ########
 ############################
 
+# GET PATIENTS LIST INSIDE HOME PAGE
 @views_router.get("/patients")
 def get_all_patients(request: Request, db: Session = Depends(get_db)):
     patients = db.query(Patients).all()
@@ -54,6 +56,7 @@ def get_all_patients(request: Request, db: Session = Depends(get_db)):
         context={"patients" : patients}
     )
 
+# GET PATIENT'S FORM TO CREATE A NEW ONE
 @views_router.get("/patients/new")
 def new_patient_form(request: Request):
     return templates.TemplateResponse(
@@ -62,6 +65,7 @@ def new_patient_form(request: Request):
         context={"edit" : None}
     )
 
+# POST NEW PATIENT WITH FORM'S INFORMATIONS
 @views_router.post("/patients/new")
 async def create_patient(request: Request, patient: PatientCreate = Depends(get_patient_form), db: Session = Depends(get_db)):
     new_patient = Patients(**patient.model_dump())
@@ -75,6 +79,7 @@ async def create_patient(request: Request, patient: PatientCreate = Depends(get_
         context={"patients" : patients}
     )
 
+# GET PATIENT'S DETAILS AND ROOT TO DETAILS PAGE
 @views_router.get("/patients/{patient_id}")
 def get_patient_details(patient_id: int, request: Request, db: Session = Depends(get_db)):
     patient = db.query(Patients).filter(Patients.id == patient_id).first()
@@ -98,6 +103,7 @@ def get_patient_details(patient_id: int, request: Request, db: Session = Depends
         context={"patient" : patient, "comorbidities" : comorbidities, "measurements" : measurements, "meal_plans" : meal_plans}
     )
 
+# GET PATIENT'S FORM TO EDIT AN EXISTING ONE
 @views_router.get("/patients/{patient_id}/edit")
 def edit_patient_form(patient_id: int, request: Request, db: Session = Depends(get_db)):
     patient = patient_exist(patient_id, db)
@@ -110,6 +116,7 @@ def edit_patient_form(patient_id: int, request: Request, db: Session = Depends(g
         context={"patient" : patient, "edit" : True}
     )
 
+# PUT PATIENT'S INFOS AFTER COMPLETING EDITION FORM
 @views_router.put("/patients/{patient_id}/edit")
 async def update_patient(patient_id: int, request: Request, edit_patient: PatientCreate = Depends(get_patient_form), db: Session = Depends(get_db)):
     if not patient_exist(patient_id, db):
@@ -126,6 +133,7 @@ async def update_patient(patient_id: int, request: Request, edit_patient: Patien
         context={"patients" : patients}
     )
 
+# GET DELETE CONFIRMATION POPUP OF PATIENT
 @views_router.get("/patients/{patient_id}/delete")
 def get_patient_delete_popup(patient_id: int, request: Request, db: Session = Depends(get_db)):
     patient = patient_exist(patient_id, db)
@@ -139,6 +147,8 @@ def get_patient_delete_popup(patient_id: int, request: Request, db: Session = De
         context={"patient" : patient}
     )
 
+# DELETE ONE PATIENT
+# DELETE ON CASCADE FOR ALL FOREIGN KEYS
 @views_router.delete("/patients/{patient_id}/delete")
 async def delete_patient(patient_id: int, request: Request, db: Session = Depends(get_db)):
     patient = patient_exist(patient_id, db)
@@ -178,6 +188,7 @@ async def delete_patient(patient_id: int, request: Request, db: Session = Depend
 ### PATIENT MEAL PLANS ###
 ##########################
 
+# GET MEAL PLAN'S FORM
 @views_router.get("/patients/{patient_id}/meal_plans/new")
 def new_meal_plans_form(patient_id: int, request: Request):
     return templates.TemplateResponse(
@@ -186,6 +197,7 @@ def new_meal_plans_form(patient_id: int, request: Request):
         context={"patient_id" : patient_id}
     )
 
+# POST NEW MEAL PLAN FOR A PATIENT
 @views_router.post("/patients/{patient_id}/meal_plans/new")
 async def create_new_meal_plan(patient_id: int, request: Request, meal_plan: MealPlanCreate = Depends(get_meal_plans_form), db: Session = Depends(get_db)):
     patient = db.query(Patients).filter(Patients.id == patient_id).first()
@@ -217,6 +229,7 @@ async def create_new_meal_plan(patient_id: int, request: Request, meal_plan: Mea
         context={"patient" : patient, "meal_plans" : meal_plans}
     )  
 
+# DELETE A MEAL PLAN
 @views_router.delete("/patients/{patient_id}/meal_plans/{meal_plan_id}")
 async def delete_meal_plan(patient_id: int, meal_plan_id: int, request: Request, db: Session = Depends(get_db)):
     patient = db.query(Patients).filter(Patients.id == patient_id).first()
@@ -246,6 +259,9 @@ async def delete_meal_plan(patient_id: int, meal_plan_id: int, request: Request,
 #####  COMORBIDITIES   #####
 ############################
 
+# GET COMORBIDITIES'S FORM
+# LOAD PATIENT'S COMORBIDITIES TO SHOW ALREADY SELECTED ONE
+# LOAD ALL COMORDITIES CHOICES
 @views_router.get("/patients/{patient_id}/comorbidities/edit")
 def manage_comorbidities(patient_id: int, request: Request, db: Session = Depends(get_db)):
     patient = db.query(Patients).filter(Patients.id == patient_id).first()
@@ -271,6 +287,7 @@ def manage_comorbidities(patient_id: int, request: Request, db: Session = Depend
         context={"patient" : patient, "all_comorbidities" : all_comorbidities, "patient_comorbidities_ids" : patient_comorbidities_ids}
     )
 
+# POST PATIENT'S COMORDITIES CHANGES
 @views_router.post("/patients/{patient_id}/comorbidities/edit")
 async def manage_comorbidities(patient_id: int, request: Request, db: Session = Depends(get_db), comorbidities_ids: List[int] = Form(default=[])):
     if not patient_exist(patient_id, db):
@@ -313,6 +330,7 @@ async def manage_comorbidities(patient_id: int, request: Request, db: Session = 
 ######  MEASUREMENTS  ######
 ############################
 
+# DELETE A PATIENT'S MEASURE
 @views_router.delete("/patients/{patient_id}/measurements/{measure_id}")
 async def delete_measurement(patient_id: int, measure_id: int, request: Request, db: Session = Depends(get_db)):
     patient = patient_exist(patient_id, db)
@@ -340,6 +358,7 @@ async def delete_measurement(patient_id: int, measure_id: int, request: Request,
         context={"patient" : patient, "measurements" : measurements}
     )
 
+# GET MEASUREMENT'S FORM
 @views_router.get("/patients/{patient_id}/measurements/new")
 def new_measurement_form(patient_id: int, request: Request):
     return templates.TemplateResponse(
@@ -348,6 +367,7 @@ def new_measurement_form(patient_id: int, request: Request):
         context={"patient_id" : patient_id, "measure" : None, "today" : date.today()}
     )
 
+# GET MEASUREMENT'S FORM IN EDIT MODE
 @views_router.get("/patients/{patient_id}/measurements/{measure_id}/edit")
 def edit_measurement_form(patient_id: int, measure_id: int, request: Request, db: Session = Depends(get_db)):
     measure = db.query(PatientMeasurement).filter(PatientMeasurement.id == measure_id).first()
@@ -361,6 +381,7 @@ def edit_measurement_form(patient_id: int, measure_id: int, request: Request, db
         context={"patient_id" : patient_id, "measure" : measure}
     )
 
+# POST NEW MEASURE FOR A PATIENT
 @views_router.post("/patients/{patient_id}/measurements/new")
 async def create_measurement(patient_id: int, request: Request, measure: PatientMeasurementCreate = Depends(get_measurement_form), db: Session = Depends(get_db)):
     patient = patient_exist(patient_id, db)
@@ -379,6 +400,7 @@ async def create_measurement(patient_id: int, request: Request, measure: Patient
         context={"patient" : patient, "measurements" : measurements}
     )
 
+# PUT CHANGES FOR A MEASURE OF ONE PATIENT
 @views_router.put("/patients/{patient_id}/measurements/{measure_id}/edit")
 async def update_measurement(patient_id: int, measure_id: int, request: Request, measure: PatientMeasurementCreate = Depends(get_measurement_form), db: Session = Depends(get_db)):
     patient = patient_exist(patient_id, db)
@@ -400,6 +422,7 @@ async def update_measurement(patient_id: int, measure_id: int, request: Request,
 ######   MEAL PLAN   #######
 ############################
 
+#GET MEAL PLAN DETAILS PAGE
 @views_router.get("/meal_plans/{meal_plan_id}")
 def get_meal_plan_details(meal_plan_id: int, request: Request, db: Session = Depends(get_db)):
     meal_plan = db.query(MealPlan).filter(MealPlan.id == meal_plan_id).first()
@@ -424,6 +447,7 @@ def get_meal_plan_details(meal_plan_id: int, request: Request, db: Session = Dep
         context={"patient" : patient, "plan" : meal_plan, "foods" : foods, "total" : total}
     )
 
+# GET NEW FOOD FORM
 @views_router.get("/meal_plans/{meal_plan_id}/foods/new")
 def new_add_food_form(meal_plan_id: int, request: Request):
         return templates.TemplateResponse(
@@ -432,6 +456,7 @@ def new_add_food_form(meal_plan_id: int, request: Request):
         context={"meal_plan_id" : meal_plan_id}
     )
 
+# GET FOOD NAME INPUT - SEARCH ENGINE
 @views_router.get("/foods/search")
 def search_foods(food_search: str = "", db: Session = Depends(get_db)):
     if len(food_search) < 2:
@@ -457,6 +482,7 @@ def search_foods(food_search: str = "", db: Session = Depends(get_db)):
     
     return HTMLResponse(html)
 
+# POST NEW FOOD INFORMATION INSIDE MEAL PLAN
 @views_router.post("/meal_plans/{meal_plan_id}/foods/new")
 async def add_food_to_mealplan(meal_plan_id: int, request: Request, food: MealPlanFoodCreate = Depends(get_food_form), db: Session = Depends(get_db)):
     meal_plan = db.query(MealPlan).filter(MealPlan.id == meal_plan_id).first()
