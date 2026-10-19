@@ -48,4 +48,7 @@ COPY . .
 EXPOSE 8000
 
 # Run the application.
-CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000"]
+
+# Run migrations, seed the database, then start the API.
+CMD ["sh", "-c", "alembic upgrade head && python -m app.seed_foods && python -m app.seed_demo && exec uvicorn app.main:app --host 0.0.0.0 --port ${PORT:-8000}"]
+
