@@ -3,6 +3,8 @@ Web application for dieticians : patient tracking, measurements, meal plans and 
 Personnal project to learn and practise backend development in Python. (API, relationnal database, migrations, containerization)
 It tries to fill the lack of usability of existing web site and brings more tools to make dieticians life easier.
 
+You can try it on (First launch might takes a few minutes) : https://dietlab-web.onrender.com/
+
 > ⚠️ **Fictional data only.** This application handles health-related concepts. It does not yet include authentication and must not be publicly exposed with real patient data.
 
 ## Why this project ? Motivation
@@ -24,7 +26,7 @@ My goal is to provide a robust web application specifically for the daily needs 
 
 | Layer | Technologies |
 |---|---|
-| Backend | Python 3.12, FastAPI, Pydantic |
+| Backend | Python 3.14, FastAPI, Pydantic |
 | Database | PostgreSQL 16, SQLAlchemy 2 (ORM), Alembic (migrations) |
 | Interface | Jinja2 (server-side rendering), HTMX, Bootstrap 5 |
 | Containerization | Docker, Docker Compose |
