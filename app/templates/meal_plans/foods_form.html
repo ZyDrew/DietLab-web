@@ -26,7 +26,6 @@
                 <div id="food-results" class="list-group mt-1" style="position: absolute; z-index: 9999; width: calc(100% - 2rem); max-height: 300px; overflow-y: auto;"></div>
                 <!-- Hidden field to stock ID -->
                 <input type="hidden" name="food_id" id="selected-food-id">
-                <small id="selected-food-name" class="text-success"></small>
             </div>
 
             <!-- Quantity -->
@@ -78,7 +77,6 @@
 <script>
     function selectFood(id, name) {
         document.getElementById('selected-food-id').value = id;
-        document.getElementById('selected-food-name').textContent = '✓ ' + name;
         document.getElementById('food-results').innerHTML = '';
         document.querySelector('[name="food_search"]').value = name;
     }

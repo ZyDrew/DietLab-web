@@ -458,7 +458,7 @@ def new_add_food_form(meal_plan_id: int, request: Request):
 
 # GET FOOD NAME INPUT - SEARCH ENGINE
 @views_router.get("/foods/search")
-def search_foods(food_search: str = "", db: Session = Depends(get_db)):
+def search_foods(request: Request, food_search: str = "", db: Session = Depends(get_db)):
     if len(food_search) < 2:
         return HTMLResponse("")
     
@@ -476,11 +476,11 @@ def search_foods(food_search: str = "", db: Session = Depends(get_db)):
         .all()
     )
     
-    html = ""
-    for food in foods:
-        html += f'<button type="button" class="list-group-item list-group-item-action" onclick="selectFood({food.id}, \'{food.name}\')">{food.name}</button>'
-    
-    return HTMLResponse(html)
+    return templates.TemplateResponse(
+        request=request,
+        name="components/food_results.html",
+        context={"foods" : foods}
+    )
 
 # POST NEW FOOD INFORMATION INSIDE MEAL PLAN
 @views_router.post("/meal_plans/{meal_plan_id}/foods/new")
