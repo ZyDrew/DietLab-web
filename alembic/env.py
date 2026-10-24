@@ -11,6 +11,7 @@ from app.models import (
     patients, foods, recipes, comorbidities, appointments,
     patient_measurement, patient_comorbidity,
     meal_plan, meal_plan_food, recipe_food,
+    users, user_sessions
 )
 
 # this is the Alembic Config object, which provides
