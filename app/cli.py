@@ -14,8 +14,8 @@ from sqlalchemy.exc import IntegrityError
 
 from app.database import SessionLocal
 from app.models.users import Users
-from app.models.user_sessions import UserSessions
 from app.services.auth import hash_password, normalize_email
+from app.services.sessions import revoke_user_sessions
 
 MIN_PASSWORD_LENGTH = 12
 EMAIL_PATTERN = re.compile(r"[^@\s]+@[^@\s]+\.[^@\s]+")
@@ -84,7 +84,7 @@ def set_password(args: argparse.Namespace) -> int:
             return 1
 
         user.password_hash = hash_password(prompt_password())
-        db.query(UserSessions).filter(UserSessions.user_id == user.id).delete()
+        revoke_user_sessions(db, user.id)
         db.commit()
         print(f"Password updated for {email}. All sessions were revoked.")
         return 0
