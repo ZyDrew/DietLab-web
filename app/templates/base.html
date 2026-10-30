@@ -17,6 +17,11 @@
                 <a class="nav-link text-white" href="/">Patients</a>
                 <a class="nav-link text-white" href="/foods">Aliments</a>
                 <a class="nav-link text-white" href="/recipes">Recettes</a>
+                {% if request.cookies.get('dietlab_session') %}
+                <form method="post" action="/logout" class="d-inline">
+                    <button type="submit" class="nav-link text-danger btn btn-link p-0">Déconnexion</button>
+                </form>
+                {% endif %}
             </div>
         </nav>
 

@@ -18,6 +18,8 @@ from app.services.auth import hash_password, normalize_email
 from app.services.sessions import revoke_user_sessions
 
 MIN_PASSWORD_LENGTH = 12
+MAX_PASSWORD_LENGTH = 128
+MAX_EMAIL_LENGTH = 255
 EMAIL_PATTERN = re.compile(r"[^@\s]+@[^@\s]+\.[^@\s]+")
 
 
@@ -26,6 +28,10 @@ def prompt_password() -> str:
     if len(password) < MIN_PASSWORD_LENGTH:
         raise ValueError(
             f"Password must be at least {MIN_PASSWORD_LENGTH} characters."
+        )
+    if len(password) > MAX_PASSWORD_LENGTH:
+        raise ValueError(
+            f"Password must not be more than {MAX_PASSWORD_LENGTH} characters."
         )
 
     confirmation = getpass.getpass("Confirm password: ")
@@ -37,6 +43,12 @@ def prompt_password() -> str:
 
 def prompt_email() -> str:
     email = normalize_email(input("Email: "))
+
+    if len(email) > MAX_EMAIL_LENGTH:
+        raise ValueError(
+            f"Email must not be more than {MAX_EMAIL_LENGTH} characters."
+        )
+
     if not EMAIL_PATTERN.fullmatch(email):
         raise ValueError("Invalid email address.")
     return email

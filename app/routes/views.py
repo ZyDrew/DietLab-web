@@ -21,7 +21,7 @@ from app.schemas.meal_plan_food import MealPlanFoodCreate
 from app.schemas.patient_measurement import PatientMeasurementCreate
 from app.schemas.patients import PatientCreate
 from app.dependencies.patient_form import get_patient_form
-from pathlib import Path
+from app.templating import templates
 from datetime import date
 
 from app.services.nutritions import calculate_macro
@@ -29,7 +29,6 @@ from app.services.utils import patient_exist
 from app.services.meal_plans import get_patient_meal_plans
 
 views_router = APIRouter()
-templates = Jinja2Templates(directory=Path("app") / "templates")
 
 #Why Request class ? as it is not use in the API_Router
 #Because Jinja2 needs it to generate correct URL and to be aware on which server it is running

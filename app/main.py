@@ -6,11 +6,13 @@ from app.routes.foods import foods_router
 from app.routes.comorbidities import comorbidities_router
 from app.routes.meal_plan import meal_plan_router
 from app.routes.views import views_router
+from app.routes.auth import auth_router
 
 app = FastAPI()
 
 #Use to include the router for all HTML views
 app.include_router(views_router)
+app.include_router(auth_router)
 
 #Use to include all the routes from the routers declaration - For API and tests only
 app.include_router(patients_router, prefix="/api")
