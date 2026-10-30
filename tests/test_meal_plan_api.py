@@ -6,7 +6,7 @@ from app.models.meal_plan_food import MealPlanFood
 from app.models.patients import Patients
 from tests.helpers import make_food
 
-def test_delete_food_from_meal_plan(client, db):
+def test_delete_food_from_meal_plan(auth_client, db):
     jane = Patients(lastname="Doe", firstname="Jane", gender=GenderEnum.FEMALE,
                             birthdate=date(1975, 10, 25), notes="Diabétique")
 
@@ -29,13 +29,13 @@ def test_delete_food_from_meal_plan(client, db):
     db.add_all([relation_a, relation_b])
     db.flush()
 
-    response = client.delete(f"/api/meal_plans/{plan.id}/foods/{relation_b.id}")
+    response = auth_client.delete(f"/api/meal_plans/{plan.id}/foods/{relation_b.id}")
 
     assert response.status_code == 204
     assert db.query(MealPlanFood).filter_by(plan_id=plan.id, food_id=food_b.id).first() is None
     assert db.query(MealPlanFood).filter_by(plan_id=plan.id, food_id=food_a.id).first() is not None
 
-def test_modify_food_from_meal_plan(client, db):
+def test_modify_food_from_meal_plan(auth_client, db):
     jane = Patients(lastname="Doe", firstname="Jane", gender=GenderEnum.FEMALE,
                             birthdate=date(1975, 10, 25), notes="Diabétique")
 
@@ -58,7 +58,7 @@ def test_modify_food_from_meal_plan(client, db):
     db.add_all([relation_a, relation_b])
     db.flush()
 
-    response = client.put(f"/api/meal_plans/{plan.id}/foods/{relation_b.id}", json={"food_id": food_b.id, "quantity": 200, "period": MealPlanEnum.DINNER, "frequency": 7})
+    response = auth_client.put(f"/api/meal_plans/{plan.id}/foods/{relation_b.id}", json={"food_id": food_b.id, "quantity": 200, "period": MealPlanEnum.DINNER, "frequency": 7})
 
     assert response.status_code == 200
     assert db.query(MealPlanFood).filter_by(plan_id=plan.id, food_id=food_b.id).first().quantity == 200
