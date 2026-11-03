@@ -8,6 +8,7 @@ from app.services.sessions import hash_token
 def test_anonymous_html(client):
     response = client.get("/", follow_redirects=False)
     assert response.status_code == 303
+    assert response.headers["location"] == "/login?next=%2F"
 
 def test_anonymous_htmx(client):
     response = client.get("/", headers={"HX-Request": "true", "HX-Current-URL": "http://testserver/"}, follow_redirects=False)
@@ -33,9 +34,11 @@ def test_expired_session(auth_client, db):
     response = auth_client.get("/", headers={"HX-Request": "true", "HX-Current-URL": "/patients"}, follow_redirects=False)
     assert response.status_code == 401
     assert response.headers.get("HX-Redirect") == "/login?next=%2Fpatients"
+    assert "dietlab_session" not in auth_client.cookies
 
 def test_inactive_user(auth_client, user, db):
     user.is_active = False
     db.commit()
     response = auth_client.get("/", follow_redirects=False)
     assert response.status_code == 303
+    assert "dietlab_session" not in auth_client.cookies
