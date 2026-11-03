@@ -1,6 +1,7 @@
 from fastapi import Depends, FastAPI
 from fastapi.staticfiles import StaticFiles
 from app.dependencies.auth import get_current_user
+from app.dependencies.csrf import require_csrf
 from app.routes.patients import patients_router
 from app.routes.recipes import recipes_router
 from app.routes.foods import foods_router
@@ -8,13 +9,14 @@ from app.routes.comorbidities import comorbidities_router
 from app.routes.meal_plan import meal_plan_router
 from app.routes.views import views_router
 from app.routes.auth import auth_router
-from app.errors import NotAuthenticated, not_authenticated_user
+from app.errors import CSRFError, NotAuthenticated, invalid_csrf_token, not_authenticated_user
 
 app = FastAPI()
 app.add_exception_handler(NotAuthenticated, not_authenticated_user)
+app.add_exception_handler(CSRFError, invalid_csrf_token)
 
 #Use to include the router for all HTML views
-app.include_router(views_router, dependencies=[Depends(get_current_user)])
+app.include_router(views_router, dependencies=[Depends(require_csrf)])
 app.include_router(auth_router)
 
 #Use to include all the routes from the routers declaration - For API and tests only

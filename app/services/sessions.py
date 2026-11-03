@@ -24,7 +24,7 @@ def hash_token(token):
 def create_session(db, user_id: int, now=None) -> str:
     """
     Create user session in DB
-    Store token hash only
+    Store token hash only + CSRF Token
     Return raw token
     """
     now = _as_utc(now)
@@ -35,7 +35,9 @@ def create_session(db, user_id: int, now=None) -> str:
     last_seen_at = now
     expires_at = now + ABSOLUTE_TIMEOUT
 
-    db.add(UserSessions(token_hash=token_hash, user_id=user_id, created_at=created_at, last_seen_at=last_seen_at, expires_at=expires_at))
+    csrf_token = secrets.token_urlsafe(32) 
+
+    db.add(UserSessions(token_hash=token_hash, user_id=user_id, created_at=created_at, last_seen_at=last_seen_at, expires_at=expires_at, csrf_token=csrf_token))
     db.commit()
     return raw_token
 
@@ -105,3 +107,17 @@ def purge_expired_sessions(db, now=None) -> int:
         db.commit()
     
     return count
+
+def get_csrf_token(db, raw_session_token) -> str | None:
+    token_hash = hash_token(raw_session_token)
+    user_session = db.query(UserSessions).filter(UserSessions.token_hash == token_hash).first()
+
+    if not user_session:
+        return None
+
+    if not user_session.csrf_token:
+        csrf_token = secrets.token_urlsafe(32)
+        user_session.csrf_token = csrf_token
+        db.commit()
+
+    return user_session.csrf_token

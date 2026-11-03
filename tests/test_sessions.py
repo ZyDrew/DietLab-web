@@ -45,6 +45,8 @@ def test_create_session(db):
     assert user_session.token_hash == token_hash_one
     assert user_session.token_hash != token_one
     assert len(user_session.token_hash) == 64
+    assert user_session.csrf_token is not None
+    assert len(user_session.csrf_token) > 0
     assert user_session.created_at == t0
     assert user_session.last_seen_at == t0
     assert user_session.expires_at == t0_plus_7d

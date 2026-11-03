@@ -7,6 +7,9 @@ from fastapi.responses import JSONResponse, RedirectResponse
 class NotAuthenticated(Exception):
     pass
 
+class CSRFError(Exception):
+    pass
+
 def not_authenticated_user(request: Request, exc: NotAuthenticated) -> Response:
     """
     Handle Response for anonymous requests
@@ -40,3 +43,6 @@ def not_authenticated_user(request: Request, exc: NotAuthenticated) -> Response:
 
     response.delete_cookie("dietlab_session", path="/")
     return response
+
+def invalid_csrf_token(request: Request, exc: CSRFError) -> Response:
+    return Response(status_code=403, content="La requête n'a pas pu être vérifiée. Rechargez la page et réessayez.")

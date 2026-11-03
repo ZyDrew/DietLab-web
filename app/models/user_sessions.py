@@ -12,6 +12,7 @@ class UserSessions(Base):
     created_at: Mapped[datetime.datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
     last_seen_at: Mapped[datetime.datetime] = mapped_column(DateTime(timezone=True))
     expires_at: Mapped[datetime.datetime] = mapped_column(DateTime(timezone=True), index=True)
+    csrf_token: Mapped[str] = mapped_column(String(64))
 
     __table_args__ = (UniqueConstraint("token_hash", name="uc_user_session_token"),)
 
