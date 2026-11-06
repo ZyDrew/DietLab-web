@@ -1,0 +1,18 @@
+<!-- templates/errors/403.html -->
+{% extends "base.html" %}
+{% block title %}Accès refusé{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-12 col-md-7 col-lg-5">
+        <div class="card">
+            <div class="card-body text-center">
+                <h1 class="h4 mb-3">Accès refusé</h1>
+                <p class="mb-4">{{ message }}</p>
+                <a href="/" class="btn btn-primary">Retour à l'accueil</a>
+                <button type="button" class="btn btn-outline-secondary" onclick="history.back()">Retour</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

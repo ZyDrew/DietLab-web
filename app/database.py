@@ -10,7 +10,8 @@ from sqlalchemy.orm import sessionmaker, DeclarativeBase
 
 load_dotenv()
 DATABASE_URL = os.getenv(key="DATABASE_URL")
-engine = create_engine(DATABASE_URL, echo=True)
+SQL_ECHO = os.getenv("SQL_ECHO", "false").lower() == "true"
+engine = create_engine(DATABASE_URL, echo=SQL_ECHO, hide_parameters=True)
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
 class Base(DeclarativeBase):
