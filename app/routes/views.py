@@ -84,7 +84,7 @@ def get_patient_details(patient_id: int, request: Request, db: Session = Depends
     patient = db.query(Patients).filter(Patients.id == patient_id).first()
     
     if patient is None:
-        return HTTPException(404, "Le patient n'existe pas")
+        raise HTTPException(404, "Le patient n'existe pas")
 
     measurements = db.query(PatientMeasurement).filter(PatientMeasurement.patient_id == patient_id).all()
     comorbidities = (
@@ -107,7 +107,7 @@ def get_patient_details(patient_id: int, request: Request, db: Session = Depends
 def edit_patient_form(patient_id: int, request: Request, db: Session = Depends(get_db)):
     patient = patient_exist(patient_id, db)
     if not patient:
-        return HTTPException(404, "Le patient n'existe pas")
+        raise HTTPException(404, "Le patient n'existe pas")
     
     return templates.TemplateResponse(
         request=request,
@@ -119,7 +119,7 @@ def edit_patient_form(patient_id: int, request: Request, db: Session = Depends(g
 @views_router.put("/patients/{patient_id}/edit")
 async def update_patient(patient_id: int, request: Request, edit_patient: PatientCreate = Depends(get_patient_form), db: Session = Depends(get_db)):
     if not patient_exist(patient_id, db):
-        return HTTPException(404, "Le patient n'existe pas")
+        raise HTTPException(404, "Le patient n'existe pas")
     
     db.query(Patients).filter(Patients.id == patient_id).update(edit_patient.model_dump())
     db.commit()
@@ -138,7 +138,7 @@ def get_patient_delete_popup(patient_id: int, request: Request, db: Session = De
     patient = patient_exist(patient_id, db)
 
     if not patient:
-        return HTTPException(404, "Le patient n'existe pas")
+        raise HTTPException(404, "Le patient n'existe pas")
 
     return templates.TemplateResponse(
         request=request,
@@ -153,13 +153,13 @@ async def delete_patient(patient_id: int, request: Request, db: Session = Depend
     patient = patient_exist(patient_id, db)
 
     if not patient:
-        return HTTPException(404, "Le patient n'existe pas")
+        raise HTTPException(404, "Le patient n'existe pas")
     
     #get all measurements + delete
     db.query(PatientMeasurement).filter(PatientMeasurement.patient_id == patient_id).delete()
     
     #get all comorbidities + delete
-    comorbidities = db.query(PatientComorbidity).filter(PatientComorbidity.patient_id == patient_id).delete()
+    db.query(PatientComorbidity).filter(PatientComorbidity.patient_id == patient_id).delete()
     
     #get all meal plan & foods related + delete
     meal_plans = db.query(MealPlan).filter(MealPlan.patient_id == patient_id).all()
@@ -202,7 +202,7 @@ async def create_new_meal_plan(patient_id: int, request: Request, meal_plan: Mea
     patient = db.query(Patients).filter(Patients.id == patient_id).first()
         
     if patient is None:
-        return HTTPException(404, "Le patient n'existe pas")
+        raise HTTPException(404, "Le patient n'existe pas")
 
     next_number = (
         db.query(func.max(MealPlan.number))
@@ -234,12 +234,12 @@ async def delete_meal_plan(patient_id: int, meal_plan_id: int, request: Request,
     patient = db.query(Patients).filter(Patients.id == patient_id).first()
         
     if patient is None:
-        return HTTPException(404, "Le patient n'existe pas")
+        raise HTTPException(404, "Le patient n'existe pas")
 
     meal_plan = db.query(MealPlan).filter(MealPlan.id == meal_plan_id, MealPlan.patient_id == patient_id).first()
 
     if meal_plan is None:
-        return HTTPException(404, "Le plan alimentaire n'existe pas")
+        raise HTTPException(404, "Le plan alimentaire n'existe pas")
 
     db.query(MealPlanFood).filter(MealPlanFood.plan_id == meal_plan_id).delete()
     db.delete(meal_plan)
@@ -266,7 +266,7 @@ def manage_comorbidities(patient_id: int, request: Request, db: Session = Depend
     patient = db.query(Patients).filter(Patients.id == patient_id).first()
     
     if patient is None:
-        return HTTPException(404, "Le patient n'existe pas")
+        raise HTTPException(404, "Le patient n'existe pas")
 
     all_comorbidities = db.query(Comorbidities).all()
 
@@ -290,7 +290,7 @@ def manage_comorbidities(patient_id: int, request: Request, db: Session = Depend
 @views_router.post("/patients/{patient_id}/comorbidities/edit")
 async def manage_comorbidities(patient_id: int, request: Request, db: Session = Depends(get_db), comorbidities_ids: List[int] = Form(default=[])):
     if not patient_exist(patient_id, db):
-        return HTTPException(404, "Le patient n'existe pas")
+        raise HTTPException(404, "Le patient n'existe pas")
 
     to_delete = (
         db.query(PatientComorbidity)
@@ -334,7 +334,7 @@ async def manage_comorbidities(patient_id: int, request: Request, db: Session = 
 async def delete_measurement(patient_id: int, measure_id: int, request: Request, db: Session = Depends(get_db)):
     patient = patient_exist(patient_id, db)
     if not patient:
-        return HTTPException(404, "le patient n'existe pas")
+        raise HTTPException(404, "Le patient n'existe pas")
 
     measure = (
         db.query(PatientMeasurement)
@@ -344,7 +344,7 @@ async def delete_measurement(patient_id: int, measure_id: int, request: Request,
     )
 
     if not measure:
-        return HTTPException(404, "La mesure n'existe pas")
+        raise HTTPException(404, "La mesure n'existe pas pour le patient sélectionné")
     
     db.delete(measure)
     db.commit()
@@ -369,10 +369,19 @@ def new_measurement_form(patient_id: int, request: Request):
 # GET MEASUREMENT'S FORM IN EDIT MODE
 @views_router.get("/patients/{patient_id}/measurements/{measure_id}/edit")
 def edit_measurement_form(patient_id: int, measure_id: int, request: Request, db: Session = Depends(get_db)):
-    measure = db.query(PatientMeasurement).filter(PatientMeasurement.id == measure_id).first()
+    patient = patient_exist(patient_id, db)
+    if not patient:
+        raise HTTPException(404, "Le patient n'existe pas")
+    
+    measure = (
+            db.query(PatientMeasurement)
+            .filter(PatientMeasurement.patient_id == patient_id)
+            .filter(PatientMeasurement.id == measure_id)
+            .first()
+        )
 
     if not measure:
-        return HTTPException(404, "la mesure n'existe pas pour le patient sélectionné")
+        raise HTTPException(404, "La mesure n'existe pas pour le patient sélectionné")
 
     return templates.TemplateResponse(
         request=request,
@@ -385,7 +394,7 @@ def edit_measurement_form(patient_id: int, measure_id: int, request: Request, db
 async def create_measurement(patient_id: int, request: Request, measure: PatientMeasurementCreate = Depends(get_measurement_form), db: Session = Depends(get_db)):
     patient = patient_exist(patient_id, db)
     if not patient:
-        return HTTPException(404, "le patient n'existe pas")
+        raise HTTPException(404, "Le patient n'existe pas")
 
     new_measure = PatientMeasurement(patient_id=patient_id, **measure.model_dump())
     db.add(new_measure)
@@ -404,7 +413,7 @@ async def create_measurement(patient_id: int, request: Request, measure: Patient
 async def update_measurement(patient_id: int, measure_id: int, request: Request, measure: PatientMeasurementCreate = Depends(get_measurement_form), db: Session = Depends(get_db)):
     patient = patient_exist(patient_id, db)
     if not patient:
-        return HTTPException(404, "Le patient n'existe pas")
+        raise HTTPException(404, "Le patient n'existe pas")
 
     db.query(PatientMeasurement).filter(PatientMeasurement.id == measure_id).update(measure.model_dump())
     db.commit()
@@ -427,7 +436,7 @@ def get_meal_plan_details(meal_plan_id: int, request: Request, db: Session = Dep
     meal_plan = db.query(MealPlan).filter(MealPlan.id == meal_plan_id).first()
 
     if not meal_plan:
-        return HTTPException(404, "Le plan alimentaire n'existe pas")
+        raise HTTPException(404, "Le plan alimentaire n'existe pas")
     
     patient = db.query(Patients).filter(Patients.id == meal_plan.patient_id).first()
 
@@ -486,7 +495,7 @@ def search_foods(request: Request, food_search: str = "", db: Session = Depends(
 async def add_food_to_mealplan(meal_plan_id: int, request: Request, food: MealPlanFoodCreate = Depends(get_food_form), db: Session = Depends(get_db)):
     meal_plan = db.query(MealPlan).filter(MealPlan.id == meal_plan_id).first()
     if not meal_plan:
-        return HTTPException(404, "Le plan alimentaire n'existe pas")
+        raise HTTPException(404, "Le plan alimentaire n'existe pas")
 
     meal_plan_food = MealPlanFood(plan_id=meal_plan_id, **food.model_dump())
     
