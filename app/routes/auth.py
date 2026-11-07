@@ -6,6 +6,7 @@ from fastapi.responses import RedirectResponse
 from sqlalchemy.orm import Session
 
 from app.database import get_db
+from app.dependencies.csrf import require_logout_csrf
 from app.dependencies.login_form import get_login_form
 from app.schemas.login import LoginCreate
 from app.services.auth import authenticate_user
@@ -67,7 +68,7 @@ def post_login_form(request: Request, next: str = Form("/"), login: LoginCreate 
     response.set_cookie(key="dietlab_session", value=raw_token, max_age=604800, httponly=True, samesite="lax", secure=COOKIE_SECURE, path="/")
     return response
 
-@auth_router.post("/logout")
+@auth_router.post("/logout", dependencies=[Depends(require_logout_csrf)])
 def post_logout(request: Request, db: Session = Depends(get_db)):
     token = request.cookies.get("dietlab_session")
     if token:

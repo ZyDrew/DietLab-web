@@ -19,6 +19,7 @@
                 <a class="nav-link text-white" href="/recipes">Recettes</a>
                 {% if request.cookies.get('dietlab_session') %}
                 <form method="post" action="/logout" class="d-inline">
+                    <input type="hidden" name="csrf_token" value="{{ request.state.csrf_token }}">
                     <button type="submit" class="nav-link text-danger btn btn-link p-0">Déconnexion</button>
                 </form>
                 {% endif %}

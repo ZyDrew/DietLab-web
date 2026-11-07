@@ -145,13 +145,43 @@ def test_logout_revokes_session_and_clears_cookie(auth_client, db):
     session = session_for(db, auth_client)
     assert session is not None
 
-    response = auth_client.post("/logout", follow_redirects=False)
+    response = auth_client.post(
+        "/logout",
+        data={"csrf_token": session.csrf_token},
+        follow_redirects=False,
+    )
 
     assert response.status_code == 303
     assert response.headers["location"] == "/login"
     assert db.query(UserSessions).filter(UserSessions.id == session.id).first() is None
     assert auth_client.cookies.get("dietlab_session") is None
     assert "max-age=0" in cookie_attributes(response)
+
+
+def test_logout_rejects_missing_csrf_token(auth_client, db):
+    session = session_for(db, auth_client)
+    assert session is not None
+
+    response = auth_client.post("/logout", follow_redirects=False)
+
+    assert response.status_code == 403
+    assert db.query(UserSessions).filter(UserSessions.id == session.id).first() is not None
+    assert auth_client.cookies.get("dietlab_session") is not None
+
+
+def test_logout_rejects_wrong_csrf_token(auth_client, db):
+    session = session_for(db, auth_client)
+    assert session is not None
+
+    response = auth_client.post(
+        "/logout",
+        data={"csrf_token": "wrong-token"},
+        follow_redirects=False,
+    )
+
+    assert response.status_code == 403
+    assert db.query(UserSessions).filter(UserSessions.id == session.id).first() is not None
+    assert auth_client.cookies.get("dietlab_session") is not None
 
 
 def test_logout_without_session(client):

@@ -69,3 +69,10 @@ def test_csrf_token_is_rendered_in_base_template(auth_client, db):
     assert match is not None
     headers = json.loads(match.group(1))
     assert headers["X-CSRF-Token"] == get_csrf_token(db, auth_client.cookies.get("dietlab_session"))
+
+
+def test_logout_form_contains_csrf_token(auth_client, db):
+    response = auth_client.get("/")
+    token = get_csrf_token(db, auth_client.cookies.get("dietlab_session"))
+
+    assert f'name="csrf_token" value="{token}"' in response.text
