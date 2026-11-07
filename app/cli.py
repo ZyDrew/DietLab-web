@@ -4,18 +4,24 @@ Administrative CLI
 Run:
     python -m app.cli create-user
     python -m app.cli set-password <email>
+
+    Scheduler/Production
+    python -m app.cli purge-sessions
+    Local debugging
+    python -m app.cli purge-sessions -d
 """
 import argparse
 import getpass
 import re
 import sys
+import traceback
 
 from sqlalchemy.exc import IntegrityError
 
 from app.database import SessionLocal
 from app.models.users import Users
 from app.services.auth import hash_password, normalize_email
-from app.services.sessions import revoke_user_sessions
+from app.services.sessions import purge_expired_sessions, revoke_user_sessions
 
 MIN_PASSWORD_LENGTH = 12
 MAX_PASSWORD_LENGTH = 128
@@ -75,7 +81,7 @@ def create_user(_args: argparse.Namespace) -> int:
         return 1
     except (ValueError, EOFError) as exc:
         db.rollback()
-        print(f"Aborted: {exc}")
+        print(f"Aborted: {exc}.")
         return 1
     except KeyboardInterrupt:
         db.rollback()
@@ -103,11 +109,27 @@ def set_password(args: argparse.Namespace) -> int:
 
     except (ValueError, EOFError) as exc:
         db.rollback()
-        print(f"Aborted: {exc}")
+        print(f"Aborted: {exc}.")
         return 1
     except KeyboardInterrupt:
         db.rollback()
         print("\nAborted.")
+        return 1
+    finally:
+        db.close()
+
+
+def purge_sessions(args: argparse.Namespace) -> int:
+    db = SessionLocal()
+    try:
+        count = purge_expired_sessions(db)
+        print(f"{count} expired sessions deleted.")
+        return 0
+    except Exception:
+        if args.debug:
+            traceback.print_exc(file=sys.stderr)
+        else:
+            print("Error during purge_sessions.", file=sys.stderr)
         return 1
     finally:
         db.close()
@@ -125,6 +147,15 @@ def build_parser() -> argparse.ArgumentParser:
     )
     reset.add_argument("email", help="Email address of the user.")
     reset.set_defaults(func=set_password)
+
+    purge = subparsers.add_parser("purge-sessions", help="Purge expired sessions.")
+    purge.add_argument(
+        "-d",
+        "--debug",
+        action="store_true",
+        help="Show the full exception traceback."
+    )
+    purge.set_defaults(func=purge_sessions)
 
     return parser
 
