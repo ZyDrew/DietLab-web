@@ -1,16 +1,15 @@
 # 🥗 DietLab
-Web application for dieticians : patient tracking, measurements, meal plans and nutritional calculations.
-Personnal project to learn and practise backend development in Python. (API, relationnal database, migrations, containerization)
-It tries to fill the lack of usability of existing web site and brings more tools to make dieticians life easier.
+Web application for dietitians: patient tracking, measurements, meal plans and nutritional calculations.
+Personal project to learn and practise backend development in Python (API, relational database, migrations, containerization).
+It tries to fill the lack of usability of existing websites and brings more tools to make dietitians' lives easier.
 
-You can try it on (First launch might takes a few minutes) : https://dietlab-web.onrender.com/
 
-> ⚠️ **Fictional data only.** This application handles health-related concepts. It does not yet include authentication and must not be publicly exposed with real patient data.
+> ⚠️ **Fictional data only.** This application handles health-related concepts. Authentication and CSRF protection are implemented, but the application is not production-ready and must remain fictional-data only until production hardening is complete.
 
 ## Why this project ? Motivation
-This project was born out of a real-world need. My girlfriend, a certified dietician, often found existing tools, to be lacking in efficiency and user experience.
-Faced with interface frustrations and missing features that slowed down her professional workflow. 
-My goal is to provide a robust web application specifically for the daily needs of dieticians.
+This project was born out of a real-world need. My girlfriend, a certified dietitian, often found existing tools to be lacking in efficiency and user experience.
+Faced with interface frustrations and missing features that slowed down her professional workflow.
+My goal is to provide a robust web application specifically for the daily needs of dietitians.
 
 ## Features
 
@@ -20,7 +19,8 @@ My goal is to provide a robust web application specifically for the daily needs 
 - **Meal plans**: multiple plans per patient, numbered, with a name and objective
 - **Foods**: database of over 3,400 foods (ANSES Ciqual database), real-time search
 - **Nutritional calculations**: macronutrients and micronutrients per food, per time of day, and in total; daily average based on weekly frequency
-- **REST API** automatically documented (Swagger)
+- **REST API** documented with Swagger (development only; must be disabled before production)
+- **Authentication**: login/logout, Argon2id password hashing, PostgreSQL-backed sessions, CSRF protection and error pages
 
 ## Tech Stack
 
@@ -28,8 +28,10 @@ My goal is to provide a robust web application specifically for the daily needs 
 |---|---|
 | Backend | Python 3.14, FastAPI, Pydantic |
 | Database | PostgreSQL 16, SQLAlchemy 2 (ORM), Alembic (migrations) |
+| Security | Server-side sessions (opaque token, SHA-256 hash), Argon2id (`pwdlib[argon2]`), CSRF synchronizer token |
 | Interface | Jinja2 (server-side rendering), HTMX, Bootstrap 5 |
 | Containerization | Docker, Docker Compose |
+| Tests | pytest, FastAPI `TestClient` |
 
 ## Architecture
 
@@ -38,19 +40,27 @@ DietLab-web/
 ├── app/
 │   ├── models/          # SQLAlchemy models (tables)
 │   ├── schemas/         # Pydantic schemas (inputs/outputs)
-│   ├── routes/          # REST API (JSON) and HTML views
-│   ├── services/        # Business logic (nutritional calculations, DER, age)
-│   ├── dependencies/    # FastAPI dependencies (form data parsing)
-│   ├── templates/       # Jinja2 templates and HTMX fragments
+│   ├── routes/          # REST API (JSON), HTML views and auth/error routes
+│   ├── services/        # Business logic (nutrition, DER, age), auth, sessions, helpers
+│   ├── dependencies/    # FastAPI dependencies (forms, authentication, CSRF)
+│   ├── templates/       # Jinja2 templates, fragments and error pages
 │   ├── static/          # Static files
 │   ├── data/            # Ciqual food CSV
 │   ├── database.py      # SQLAlchemy engine and sessions
+│   ├── cli.py           # Admin commands (users, password, session purge)
+│   ├── errors.py        # App-specific errors and exception handlers
+│   ├── templating.py    # Jinja2Templates instance
 │   ├── seed_foods.py    # Initial food data loading
+│   ├── seed_demo.py     # Fictional demo data (development only)
 │   └── main.py          # FastAPI entry point
 ├── alembic/             # Database migrations
+├── tests/               # pytest suite
 ├── Dockerfile
 ├── compose.yaml
-└── requirements.txt
+├── requirements.txt
+├── requirements-dev.txt
+├── pytest.ini
+└── README.md
 ```
 
 Request flow: `route → dependency/schema (validation) → service (logic) → model (database)`.
@@ -60,13 +70,26 @@ HTML views return **fragments** that HTMX inserts into the page without a full r
 
 ![Database schema](docs/schema-db.png)
 
-Main tables: `patients`, `patient_measurement`, `comorbidities`, `patient_comorbidity`, `foods`, `recipes`, `recipe_food`, `meal_plan`, `meal_plan_food`, `appointments`.
+Main tables: `patients`, `patient_measurement`, `comorbidities`, `patient_comorbidity`, `foods`, `recipes`, `recipe_food`, `meal_plan`, `meal_plan_food`, `appointments`, `users`, `user_sessions`.
 
 Design decisions:
 - Calculable values (BMI, calories) are **not stored**; they are calculated on demand.
 - Many-to-many relationships use junction tables with uniqueness constraints.
 - Measurements are stored historically to enable progress charts.
 - Each plan has a number unique to its patient (unique constraint `patient + number`).
+- Only a SHA-256 hash of each session token is stored in `user_sessions`.
+
+## Security
+
+- **Single account, no registration and no roles.** Accounts are created and changed only through `app.cli` (`create-user`, `set-password`).
+- **Passwords** are hashed with Argon2id (`pwdlib[argon2]`). Login failures return one generic message and do not reveal whether the email exists.
+- **Sessions** are stored server-side in PostgreSQL as opaque tokens; only their SHA-256 hash is kept. Expiry is 8 hours idle and 7 days absolute.
+- **The cookie** `dietlab_session` is `HttpOnly`, `SameSite=Lax`, `Path=/`, 7-day `Max-Age`, and `Secure` when `COOKIE_SECURE=true`.
+- **Protected routes:** every route except `/login`, `/logout`, `/static` and `/error/*` requires a session. Anonymous HTML requests redirect to `/login?next=...`; HTMX requests get `401` with `HX-Redirect`; `/api` returns JSON `401`.
+- **CSRF:** state-changing HTML views require a synchronizer token bound to the session, sent by HTMX in the `X-CSRF-Token` header and by the logout form in a hidden field. The JSON API is session-protected but CSRF-exempt because it is development-only.
+- **Errors:** `403`, `404` and `500` return the real status and a full page. `500` responses never contain a traceback. SQL echo is off by default and SQLAlchemy hides bind parameters in exceptions, so logs do not contain emails, patient data or secrets.
+
+These controls cover authentication; they do not make the application production-ready. Login throttling, security headers, HTTPS, disabling `/docs` and `/api`, backups and monitoring are still required (see Future Improvements).
 
 ## Quick Start (Docker)
 
@@ -100,12 +123,19 @@ At startup, the application:
 1. waits for PostgreSQL to be ready;
 2. applies migrations (`alembic upgrade head`);
 3. loads the food data if the table is empty;
-4. starts the server.
+4. loads the fictional demo data (`seed_demo.py` — development and demonstration only);
+5. starts the server.
+
+Create the first user account (there is no registration page):
+
+```bash
+docker compose exec server python -m app.cli create-user
+```
 
 | Service | Address |
 |---|---|
 | Application | http://localhost:8000 |
-| API documentation (Swagger) | http://localhost:8000/docs |
+| API documentation (Swagger, development only) | http://localhost:8000/docs |
 | Database (SQL client) | `localhost:<DB_PORT>` |
 
 ### Useful Commands
@@ -116,6 +146,17 @@ docker compose logs -f server  # follow application logs
 docker compose down            # stop (data is preserved)
 docker compose down -v         # stop AND delete data ⚠️
 ```
+
+Administration commands (run inside the `server` container):
+
+```bash
+python -m app.cli create-user                 # create an account
+python -m app.cli set-password <email>        # change a password and revoke all sessions
+python -m app.cli purge-sessions              # delete expired sessions (no user argument)
+python -m app.cli purge-sessions -d           # same, with the full traceback (local debugging)
+```
+
+`purge-sessions` is a maintenance job: it removes only rows whose absolute or idle expiry has passed. It is safe to run on a schedule and never logs out an active user.
 
 ## Local Development (without containerizing the application)
 
@@ -133,6 +174,8 @@ Create `app/.env`:
 
 ```env
 DATABASE_URL=postgresql+psycopg2://dietlab_user:change_me@localhost:5432/dietlab
+COOKIE_SECURE=false
+SQL_ECHO=false
 ```
 
 (adjust the username, password, and port to match your `.env` file), then:
@@ -140,8 +183,21 @@ DATABASE_URL=postgresql+psycopg2://dietlab_user:change_me@localhost:5432/dietlab
 ```bash
 alembic upgrade head
 python -m app.seed_foods
+python -m app.seed_demo        # optional: fictional demo data, development only
+python -m app.cli create-user  # required before the first login
 uvicorn app.main:app --reload
 ```
+
+For a local HTTP server, keep `COOKIE_SECURE=false`; a `Secure` cookie is only sent over HTTPS. Set it to `true` behind HTTPS.
+
+## Tests
+
+```bash
+pip install -r requirements-dev.txt
+pytest -q
+```
+
+The suite covers authentication and session lifecycle, CSRF, authentication guards, error pages, food search and the meal plan API. It runs against the configured PostgreSQL database and rolls back every test.
 
 ## Migrations
 
@@ -162,9 +218,9 @@ Nutritional values come from the **Ciqual** food composition database maintained
 
 ## Future Improvements
 
-- Authentication and role management (FastAPI Auth)
-- Automated tests (pytest)
-- Continuous integration (GitHub Actions)
-- Database-managed cascading deletion (`ON DELETE CASCADE`)
-- Online deployment
-- Recipe and appointment management in the interface
+- **Production readiness**: login throttling/lockout, security headers, HTTPS, per-environment configuration, disabling `/docs`, `/redoc`, `/openapi.json` and `/api`, removing `seed_demo` from the production startup, password-change UI and a `/health` endpoint.
+- **Operations**: continuous integration (GitHub Actions), managed PostgreSQL, automated backups with a tested restore, monitoring and deployment.
+- **Data**: a better food data source than Ciqual (licence, coverage, micronutrients, handling of unknown values).
+- **Features**: recipes in the interface, foods/recipes pages, patient search, editing and removing foods inside a meal plan, PDF export, measurement charts, energy needs with the NAP.
+- Database-managed cascading deletion (`ON DELETE CASCADE`) instead of manual child deletion.
+- Better UI.
