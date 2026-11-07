@@ -6,8 +6,7 @@ from app.database import engine, get_db
 from app.main import app
 from app.models.users import Users
 from app.services.auth import hash_password
-
-TEST_PASSWORD = "correct-password"
+from tests.helpers import TEST_PASSWORD
 
 @pytest.fixture
 def db():
