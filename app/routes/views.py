@@ -26,7 +26,7 @@ from datetime import date
 
 from app.services.nutritions import calculate_macro
 from app.services.utils import patient_exist
-from app.services.meal_plans import get_patient_meal_plans
+from app.services.meal_plans import get_meal_plan_foods, get_patient_meal_plans
 
 views_router = APIRouter()
 
@@ -440,13 +440,7 @@ def get_meal_plan_details(meal_plan_id: int, request: Request, db: Session = Dep
     
     patient = db.query(Patients).filter(Patients.id == meal_plan.patient_id).first()
 
-    meal_plan_foods = (
-        db.query(MealPlanFood)
-        .filter(MealPlanFood.plan_id == meal_plan_id)
-        .options(joinedload(MealPlanFood.food))
-        .all()
-    )
-
+    meal_plan_foods = get_meal_plan_foods(db, meal_plan_id)
     foods, total = calculate_macro(meal_plan_foods)
 
     return templates.TemplateResponse(
@@ -502,13 +496,7 @@ async def add_food_to_mealplan(meal_plan_id: int, request: Request, food: MealPl
     db.add(meal_plan_food)
     db.commit()
 
-    meal_plan_foods = (
-        db.query(MealPlanFood)
-        .filter(MealPlanFood.plan_id == meal_plan_id)
-        .options(joinedload(MealPlanFood.food))
-        .all()
-    )
-
+    meal_plan_foods = get_meal_plan_foods(db, meal_plan_id)
     foods, total = calculate_macro(meal_plan_foods)
 
     return templates.TemplateResponse(
