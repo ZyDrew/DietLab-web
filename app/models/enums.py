@@ -31,9 +31,18 @@ class MealPlanEnum(str, Enum):
         labels = {
             "breakfast": "Petit déjeuner",
             "morning_snack": "Collation matin",
-            "lunch": "Déjeuner",
+            "lunch": "Dîner",
             "afternoon_snack": "Collation après-midi",
-            "dinner": "Dîner",
+            "dinner": "Souper",
             "evening_snack": "Collation soir"
         }
         return labels[self.value]
+
+MEAL_PLAN_PERIOD_ORDER = (
+    MealPlanEnum.BREAKFAST,
+    MealPlanEnum.MORNING_SNACK,
+    MealPlanEnum.LUNCH,
+    MealPlanEnum.AFTERNOON_SNACK,
+    MealPlanEnum.DINNER,
+    MealPlanEnum.EVENING_SNACK
+)

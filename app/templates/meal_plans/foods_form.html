@@ -57,12 +57,9 @@
             <div class="col-12">
                 <label class="form-label">Période</label>
                 <select class="form-select" name="period">
-                    <option value="breakfast">Petit déjeuner</option>
-                    <option value="morning_snack">Collation matin</option>
-                    <option value="lunch">Déjeuner</option>
-                    <option value="afternoon_snack">Collation après-midi</option>
-                    <option value="dinner">Dîner</option>
-                    <option value="evening_snack">Collation soir</option>
+                    {% for period in meal_plan_period %}
+                    <option value="{{ period.value }}">{{ period.label }}</option>
+                    {% endfor %}
                 </select>
             </div>
 

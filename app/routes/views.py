@@ -2,7 +2,6 @@ from typing import List
 
 from fastapi import APIRouter, Depends, Form, HTTPException, Request
 from fastapi.responses import HTMLResponse
-from fastapi.templating import Jinja2Templates
 from sqlalchemy import case, func
 from sqlalchemy.orm import Session, joinedload
 from app.database import get_db
@@ -15,6 +14,7 @@ from app.models.meal_plan_food import MealPlanFood
 from app.models.patient_comorbidity import PatientComorbidity
 from app.models.patients import Patients
 from app.models.patient_measurement import PatientMeasurement
+from app.models.enums import MEAL_PLAN_PERIOD_ORDER
 from app.schemas.meal_plan import MealPlanCreate
 from app.dependencies.meal_plans_form import get_meal_plans_form
 from app.schemas.meal_plan_food import MealPlanFoodCreate
@@ -461,7 +461,7 @@ def new_add_food_form(meal_plan_id: int, request: Request):
         return templates.TemplateResponse(
         request=request,
         name="meal_plans/foods_form.html",
-        context={"meal_plan_id" : meal_plan_id}
+        context={"meal_plan_id" : meal_plan_id, "meal_plan_period": MEAL_PLAN_PERIOD_ORDER}
     )
 
 # GET FOOD NAME INPUT - SEARCH ENGINE
