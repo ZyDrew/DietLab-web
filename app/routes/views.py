@@ -154,26 +154,10 @@ async def delete_patient(patient_id: int, request: Request, db: Session = Depend
 
     if not patient:
         raise HTTPException(404, "Le patient n'existe pas")
-    
-    #get all measurements + delete
-    db.query(PatientMeasurement).filter(PatientMeasurement.patient_id == patient_id).delete()
-    
-    #get all comorbidities + delete
-    db.query(PatientComorbidity).filter(PatientComorbidity.patient_id == patient_id).delete()
-    
-    #get all meal plan & foods related + delete
-    meal_plans = db.query(MealPlan).filter(MealPlan.patient_id == patient_id).all()
 
-    for plan in meal_plans:
-        db.query(MealPlanFood).filter(MealPlanFood.plan_id == plan.id).delete()
-    db.flush()
-
-    for plan in meal_plans:
-        db.delete(plan)
-    db.flush()
-
+    # Measurements, appointments, comorbidity links, meal plans and their foods
+    # are removed by PostgreSQL through ON DELETE CASCADE.
     db.delete(patient)
-
     db.commit()
 
     patients = db.query(Patients).all()
@@ -241,7 +225,7 @@ async def delete_meal_plan(patient_id: int, meal_plan_id: int, request: Request,
     if meal_plan is None:
         raise HTTPException(404, "Le plan alimentaire n'existe pas")
 
-    db.query(MealPlanFood).filter(MealPlanFood.plan_id == meal_plan_id).delete()
+    # The plan's foods are removed by PostgreSQL through ON DELETE CASCADE.
     db.delete(meal_plan)
     db.commit()
 
