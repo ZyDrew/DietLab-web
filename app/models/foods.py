@@ -14,6 +14,7 @@ class Foods(Base):
     calcium: Mapped[float] = mapped_column(Numeric(10,2))
     iron: Mapped[float] = mapped_column(Numeric(10,2))
     vitamin_c: Mapped[float] = mapped_column(Numeric(10,2))
+    source: Mapped[str] = mapped_column(String(3), default="MAN")
 
     def __repr__(self):
-        return f"Aliment(id={self.id}, nom={self.name}, calories={self.calories}, protéines={self.proteins}, lipides={self.fat}, glucides={self.carbs}, calcium={self.calcium}, fer={self.iron}, vitamine C={self.vitamin_c})"
+        return f"Aliment(id={self.id}, nom={self.name}, calories={self.calories}, protéines={self.proteins}, lipides={self.fat}, glucides={self.carbs}, calcium={self.calcium}, fer={self.iron}, vitamine C={self.vitamin_c}, source={self.source})"

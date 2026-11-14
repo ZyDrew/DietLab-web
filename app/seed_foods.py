@@ -30,7 +30,8 @@ def seed_foods():
                     carbs=float(row["carbs"]),
                     calcium=float(row["calcium"]),
                     iron=float(row["iron"]),
-                    vitamin_c=float(row["vitamin_c"])
+                    vitamin_c=float(row["vitamin_c"]),
+                    source=""
                 ))
 
             db.bulk_save_objects(foods)

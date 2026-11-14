@@ -12,6 +12,7 @@ class FoodCreate(BaseModel):
 
 class FoodResponse(FoodCreate):
     id: int
+    source: str
 
     #Allow Pydantic to read SQLAlchemy's python object as a dictionnary
     model_config = ConfigDict(from_attributes=True)
