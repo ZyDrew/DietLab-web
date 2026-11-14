@@ -5,7 +5,7 @@ from fastapi.responses import HTMLResponse
 from sqlalchemy import case, func
 from sqlalchemy.orm import Session, joinedload
 from app.database import get_db
-from app.dependencies.foods_form import get_food_form
+from app.dependencies.meal_plan_food_form import get_meal_plan_food_form
 from app.dependencies.measurement_form import get_measurement_form
 from app.models.comorbidities import Comorbidities
 from app.models.foods import Foods
@@ -486,7 +486,7 @@ def search_foods(request: Request, food_search: str = "", db: Session = Depends(
 
 # POST NEW FOOD INFORMATION INSIDE MEAL PLAN
 @views_router.post("/meal_plans/{meal_plan_id}/foods/new")
-async def add_food_to_mealplan(meal_plan_id: int, request: Request, food: MealPlanFoodCreate = Depends(get_food_form), db: Session = Depends(get_db)):
+async def add_food_to_mealplan(meal_plan_id: int, request: Request, food: MealPlanFoodCreate = Depends(get_meal_plan_food_form), db: Session = Depends(get_db)):
     meal_plan = db.query(MealPlan).filter(MealPlan.id == meal_plan_id).first()
     if not meal_plan:
         raise HTTPException(404, "Le plan alimentaire n'existe pas")

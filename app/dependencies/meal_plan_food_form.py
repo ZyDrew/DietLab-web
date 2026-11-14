@@ -2,7 +2,7 @@ from fastapi import Form
 from app.schemas.meal_plan_food import MealPlanFoodCreate
 from app.models.enums import MealPlanEnum
 
-def get_food_form(
+def get_meal_plan_food_form(
     food_id: int = Form(...),
     quantity: int = Form(...),
     frequency: int = Form(...),
