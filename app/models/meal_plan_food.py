@@ -7,8 +7,8 @@ class MealPlanFood(Base):
     __tablename__ = "meal_plan_food"    
 
     id: Mapped[int] = mapped_column(primary_key=True)
-    plan_id: Mapped[int] = mapped_column(ForeignKey("meal_plan.id"))
-    food_id: Mapped[int] = mapped_column(ForeignKey("foods.id"))
+    plan_id: Mapped[int] = mapped_column(ForeignKey("meal_plan.id", ondelete="CASCADE"))
+    food_id: Mapped[int] = mapped_column(ForeignKey("foods.id", ondelete="CASCADE"))
     quantity: Mapped[int] = mapped_column(Integer)
     period: Mapped[MealPlanEnum] = mapped_column(Enum(MealPlanEnum))
     frequency: Mapped[int] = mapped_column(Integer)

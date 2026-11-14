@@ -9,7 +9,7 @@ class Appointments(Base):
     __tablename__ = "appointments"    
 
     id: Mapped[int] = mapped_column(primary_key=True)
-    patient_id: Mapped[int] = mapped_column(ForeignKey("patients.id"))
+    patient_id: Mapped[int] = mapped_column(ForeignKey("patients.id", ondelete="CASCADE"))
     date_time: Mapped[datetime.datetime] = mapped_column(DateTime)
     notes: Mapped[Optional[str]] = mapped_column(Text)
     type: Mapped[AppointmentEnum] = mapped_column(Enum(AppointmentEnum))

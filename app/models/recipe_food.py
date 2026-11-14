@@ -7,7 +7,7 @@ class RecipeFood(Base):
     __tablename__ = "recipe_food"    
 
     id: Mapped[int] = mapped_column(primary_key=True)
-    recipe_id: Mapped[int] = mapped_column(ForeignKey("recipes.id"))
+    recipe_id: Mapped[int] = mapped_column(ForeignKey("recipes.id", ondelete="CASCADE"))
     food_id: Mapped[int] = mapped_column(ForeignKey("foods.id"))
     quantity: Mapped[int] = mapped_column(Integer)
     unit: Mapped[UnitEnum] = mapped_column(Enum(UnitEnum))

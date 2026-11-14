@@ -8,7 +8,7 @@ class MealPlan(Base):
     __tablename__ = "meal_plan"    
 
     id: Mapped[int] = mapped_column(primary_key=True)
-    patient_id: Mapped[int] = mapped_column(ForeignKey("patients.id"))
+    patient_id: Mapped[int] = mapped_column(ForeignKey("patients.id", ondelete="CASCADE"))
     start_date: Mapped[datetime.date] = mapped_column(Date)
     name: Mapped[str] = mapped_column(String(100))
     number: Mapped[int] = mapped_column(Integer)

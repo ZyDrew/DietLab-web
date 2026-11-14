@@ -6,8 +6,8 @@ class PatientComorbidity(Base):
     __tablename__ = "patient_comorbidity"    
 
     id: Mapped[int] = mapped_column(primary_key=True)
-    patient_id: Mapped[int] = mapped_column(ForeignKey("patients.id"))
-    comorbidity_id: Mapped[int] = mapped_column(ForeignKey("comorbidities.id"))
+    patient_id: Mapped[int] = mapped_column(ForeignKey("patients.id", ondelete="CASCADE"))
+    comorbidity_id: Mapped[int] = mapped_column(ForeignKey("comorbidities.id", ondelete="CASCADE"))
 
     #Allows Python to know Comorbidity related object without additionnal query
     comorbidity = relationship("Comorbidities")

@@ -7,7 +7,7 @@ class PatientMeasurement(Base):
     __tablename__ = "patient_measurement"    
 
     id: Mapped[int] = mapped_column(primary_key=True)
-    patient_id: Mapped[int] = mapped_column(ForeignKey("patients.id"))
+    patient_id: Mapped[int] = mapped_column(ForeignKey("patients.id", ondelete="CASCADE"))
     height: Mapped[float] = mapped_column(Numeric(6,2))
     weight: Mapped[float] = mapped_column(Numeric(6,2))
     record_date: Mapped[datetime.date] = mapped_column(Date, server_default=func.current_date()) 
