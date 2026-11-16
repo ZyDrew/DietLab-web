@@ -1,14 +1,12 @@
 from typing import List
 
 from fastapi import APIRouter, Depends, Form, HTTPException, Request
-from fastapi.responses import HTMLResponse
-from sqlalchemy import case, func
+from sqlalchemy import func
 from sqlalchemy.orm import Session, joinedload
 from app.database import get_db
 from app.dependencies.meal_plan_food_form import get_meal_plan_food_form
 from app.dependencies.measurement_form import get_measurement_form
 from app.models.comorbidities import Comorbidities
-from app.models.foods import Foods
 from app.models.meal_plan import MealPlan
 from app.models.meal_plan_food import MealPlanFood
 from app.models.patient_comorbidity import PatientComorbidity
@@ -21,6 +19,7 @@ from app.schemas.meal_plan_food import MealPlanFoodCreate
 from app.schemas.patient_measurement import PatientMeasurementCreate
 from app.schemas.patients import PatientCreate
 from app.dependencies.patient_form import get_patient_form
+from app.services.foods import search_foods
 from app.templating import templates
 from datetime import date
 
@@ -444,23 +443,8 @@ def new_add_food_form(meal_plan_id: int, request: Request):
 
 # GET FOOD NAME INPUT - SEARCH ENGINE
 @views_router.get("/foods/search")
-def search_foods(request: Request, food_search: str = "", db: Session = Depends(get_db)):
-    if len(food_search) < 2:
-        return HTMLResponse("")
-    
-    foods = (
-        db.query(Foods)
-        .filter(Foods.name.ilike(f"%{food_search}%"))
-        .order_by(
-            case(
-                (Foods.name.ilike(f"{food_search}%"), 0),
-                else_=1
-            ),
-            Foods.name
-        )
-        .limit(100)
-        .all()
-    )
+def food_search_bar(request: Request, food_search: str = "", db: Session = Depends(get_db)):
+    foods = search_foods(db, food_search)
     
     return templates.TemplateResponse(
         request=request,
