@@ -1,0 +1,5 @@
+{% for food in foods %}
+<a href="/foods/{{ food.id }}" class="list-group-item list-group-item-action">
+    {{ food.name }}
+</a>
+{% endfor %}

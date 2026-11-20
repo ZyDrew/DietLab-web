@@ -1,0 +1,37 @@
+<!-- templates/foods/details.html -->
+
+<div class="card border-0 shadow-sm">
+    <div class="card-header bg-success text-white d-flex justify-content-between align-items-center">
+        <strong>{{ food.name }}</strong>
+        <span class="badge bg-light text-success">
+            {{ "Ajout manuel" if food.source == "MAN" else "Ciqual" }}
+        </span>
+    </div>
+    <div class="card-body p-0">
+        <table class="table table-hover mb-0">
+            <caption class="caption-top px-3">Valeurs nutritionnelles pour 100 g ou 100 ml</caption>
+            <thead class="table-secondary">
+                <tr>
+                    <th>Calories (kcal)</th>
+                    <th>Protéines (g)</th>
+                    <th>Glucides (g)</th>
+                    <th>Lipides (g)</th>
+                    <th>Calcium (mg)</th>
+                    <th>Fer (mg)</th>
+                    <th>Vitamine C (mg)</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>{{ food.calories }}</td>
+                    <td>{{ food.proteins }}</td>
+                    <td>{{ food.carbs }}</td>
+                    <td>{{ food.fat }}</td>
+                    <td>{{ food.calcium }}</td>
+                    <td>{{ food.iron }}</td>
+                    <td>{{ food.vitamin_c }}</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+</div>

@@ -1,0 +1,20 @@
+<!-- templates/foods/page.html -->
+
+{% extends "base.html" %}
+{% block title %}Aliments{% endblock %}
+
+{% block content %}
+
+<h4 class="mb-3">Aliments</h4>
+
+{% include "foods/search_bar.html" %}
+
+<div id="food-detail">
+    {% if food %}
+    {% include "foods/details.html" %}
+    {% else %}
+    <p class="text-muted">Recherchez un aliment pour afficher ses valeurs nutritionnelles.</p>
+    {% endif %}
+</div>
+
+{% endblock %}

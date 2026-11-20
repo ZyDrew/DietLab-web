@@ -7,6 +7,7 @@ from app.database import get_db
 from app.dependencies.meal_plan_food_form import get_meal_plan_food_form
 from app.dependencies.measurement_form import get_measurement_form
 from app.models.comorbidities import Comorbidities
+from app.models.foods import Foods
 from app.models.meal_plan import MealPlan
 from app.models.meal_plan_food import MealPlanFood
 from app.models.patient_comorbidity import PatientComorbidity
@@ -443,13 +444,39 @@ def new_add_food_form(meal_plan_id: int, request: Request):
 
 # GET FOOD NAME INPUT - SEARCH ENGINE
 @views_router.get("/foods/search")
-def food_search_bar(request: Request, food_search: str = "", db: Session = Depends(get_db)):
+def food_search_bar(request: Request, food_search: str = "", as_links: bool = False, db: Session = Depends(get_db)):
     foods = search_foods(db, food_search)
-    
+
+    # The page needs links, the meal plan modal needs buttons handled by its JavaScript
+    name = "components/food_results_links.html" if as_links else "components/food_results.html"
+
     return templates.TemplateResponse(
         request=request,
-        name="components/food_results.html",
+        name=name,
         context={"foods" : foods}
+    )
+
+# GET FOODS PAGE
+@views_router.get("/foods")
+def foods_page(request: Request):
+    return templates.TemplateResponse(
+        request=request,
+        name="foods/page.html",
+        context={"food" : None}
+    )
+
+# GET FOOD DETAILS
+@views_router.get("/foods/{food_id}")
+def food_details(food_id: int, request: Request, db: Session = Depends(get_db)):
+    food = db.query(Foods).filter(Foods.id == food_id).first()
+
+    if food is None:
+        raise HTTPException(404, "L'aliment n'existe pas")
+
+    return templates.TemplateResponse(
+        request=request,
+        name="foods/page.html",
+        context={"food" : food}
     )
 
 # POST NEW FOOD INFORMATION INSIDE MEAL PLAN
