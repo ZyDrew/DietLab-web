@@ -1,4 +1,5 @@
 from fastapi import Depends, FastAPI
+from fastapi.exceptions import RequestValidationError
 from fastapi.staticfiles import StaticFiles
 from starlette.exceptions import HTTPException as StarletteHTTPException
 from app.dependencies.auth import get_current_user
@@ -18,12 +19,14 @@ from app.errors import (
     internal_error,
     invalid_csrf_token,
     not_authenticated_user,
+    request_validation_error,
 )
 
 app = FastAPI()
 app.add_exception_handler(NotAuthenticated, not_authenticated_user)
 app.add_exception_handler(CSRFError, invalid_csrf_token)
 app.add_exception_handler(StarletteHTTPException, http_exception)
+app.add_exception_handler(RequestValidationError, request_validation_error)
 app.add_exception_handler(Exception, internal_error)
 
 #Use to include the router for all HTML views

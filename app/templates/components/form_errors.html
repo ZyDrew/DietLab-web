@@ -1,0 +1,9 @@
+<!-- templates/components/form_errors.html -->
+
+<div class="alert alert-danger mb-0" role="alert">
+    <ul class="mb-0">
+        {% for message in messages %}
+        <li>{{ message }}</li>
+        {% endfor %}
+    </ul>
+</div>

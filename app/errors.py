@@ -2,6 +2,8 @@ import logging
 from urllib.parse import urlencode, urlsplit
 
 from fastapi import Request, Response
+from fastapi.exception_handlers import request_validation_exception_handler
+from fastapi.exceptions import RequestValidationError
 from fastapi.responses import HTMLResponse, JSONResponse, RedirectResponse
 from starlette.exceptions import HTTPException as StarletteHTTPException
 
@@ -61,6 +63,94 @@ def _htmx_error_redirect(status: int, message: str | None = None) -> Response:
         status_code=status,
         headers={"HX-Redirect": _error_url(status, message)},
     )
+
+
+# French labels for the form fields, shared by every modal that returns validation errors.
+FIELD_LABELS = {
+    "name": "Nom",
+    "lastname": "Nom",
+    "firstname": "Prénom",
+    "gender": "Sexe",
+    "birthdate": "Date de naissance",
+    "notes": "Notes",
+    "height": "Taille",
+    "weight": "Poids",
+    "record_date": "Date de prise",
+    "goal": "Objectif",
+    "number": "Numéro",
+    "start_date": "Date de début",
+    "food_id": "Aliment",
+    "patient_id": "Patient",
+    "quantity": "Quantité",
+    "frequency": "Fréquence",
+    "period": "Période",
+    "calories": "Calories",
+    "proteins": "Protéines",
+    "fat": "Lipides",
+    "carbs": "Glucides",
+    "calcium": "Calcium",
+    "iron": "Fer",
+    "vitamin_c": "Vitamine C",
+    "source": "Source",
+}
+
+
+def _validation_message(error: dict) -> str:
+    location = error.get("loc") or ()
+    field = str(location[-1]) if location else ""
+    label = FIELD_LABELS.get(field, field or "Formulaire")
+    kind = error.get("type", "")
+    context = error.get("ctx") or {}
+
+    if kind == "missing":
+        sentence = "champ obligatoire."
+    elif kind == "greater_than_equal":
+        sentence = f"la valeur minimale est {context.get('ge')}."
+    elif kind == "less_than_equal":
+        sentence = f"la valeur maximale est {context.get('le')}."
+    elif kind == "string_too_long":
+        maximum = context.get('max_length')
+        sentence = f"{maximum} caractère{'s' if maximum != 1 else ''} maximum."
+    elif kind == "string_too_short":
+        minimum = context.get('min_length')
+        sentence = f"{minimum} caractère{'s' if minimum != 1 else ''} minimum."
+    elif kind in ("float_parsing", "int_parsing", "decimal_parsing", "float_type", "int_type"):
+        sentence = "le champ doit être numérique."
+    elif kind == "string_type":
+        sentence = "le champ ne doit contenir que du texte."
+    elif kind.startswith("date"):
+        sentence = "date non valide."
+    elif kind in ("enum", "enum_parsing", "literal_error"):
+        sentence = "cette valeur n'est pas autorisée."
+    elif kind == "bool_parsing":
+        sentence = "une valeur vrai ou faux est attendue."
+    else:
+        sentence = "valeur invalide."
+
+    return f"{label} : {sentence}"
+
+
+def form_errors(request: Request, messages: list[str], status_code: int = 422) -> Response:
+    """Render validation messages into the generic #form-errors container.
+
+    The response is retargeted so the form keeps the values already typed.
+    """
+    return templates.TemplateResponse(
+        request=request,
+        name="components/form_errors.html",
+        context={"messages": messages},
+        status_code=status_code,
+        headers={"HX-Retarget": "#form-errors", "HX-Reswap": "innerHTML"},
+    )
+
+
+async def request_validation_error(request: Request, exc: RequestValidationError) -> Response:
+    """Show validation errors inside the form, keep JSON for API clients."""
+    if request.headers.get("HX-Request") != "true":
+        return await request_validation_exception_handler(request, exc)
+
+    messages = list(dict.fromkeys(_validation_message(error) for error in exc.errors()))
+    return form_errors(request, messages)
 
 
 def not_authenticated_user(request: Request, exc: NotAuthenticated) -> Response:
