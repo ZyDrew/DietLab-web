@@ -40,3 +40,12 @@ def search_foods(db: Session, term: str) -> list[Foods]:
     )
 
     return foods
+
+
+def find_name_duplicate(db: Session, name: str) -> Foods | None:
+    """Return the food whose name matches, ignoring case and surrounding spaces."""
+    return (
+        db.query(Foods)
+        .filter(func.lower(Foods.name) == func.lower(name.strip()))
+        .first()
+    )

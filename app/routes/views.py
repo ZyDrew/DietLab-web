@@ -1,10 +1,12 @@
 from typing import List
 
-from fastapi import APIRouter, Depends, Form, HTTPException, Request
+from fastapi import APIRouter, Depends, Form, HTTPException, Request, Response
 from sqlalchemy import func
 from sqlalchemy.orm import Session, joinedload
 from app.database import get_db
+from app.dependencies.foods_form import get_foods_form
 from app.dependencies.meal_plan_food_form import get_meal_plan_food_form
+from app.errors import form_errors
 from app.dependencies.measurement_form import get_measurement_form
 from app.models.comorbidities import Comorbidities
 from app.models.foods import Foods
@@ -15,12 +17,13 @@ from app.models.patients import Patients
 from app.models.patient_measurement import PatientMeasurement
 from app.models.enums import MEAL_PLAN_PERIOD_ORDER
 from app.schemas.meal_plan import MealPlanCreate
+from app.schemas.foods import FoodCreate
 from app.dependencies.meal_plans_form import get_meal_plans_form
 from app.schemas.meal_plan_food import MealPlanFoodCreate
 from app.schemas.patient_measurement import PatientMeasurementCreate
 from app.schemas.patients import PatientCreate
 from app.dependencies.patient_form import get_patient_form
-from app.services.foods import search_foods
+from app.services.foods import find_name_duplicate, search_foods
 from app.templating import templates
 from datetime import date
 
@@ -464,6 +467,27 @@ def foods_page(request: Request):
         name="foods/page.html",
         context={"food" : None}
     )
+
+# GET NEW FOOD FORM
+@views_router.get("/foods/new")
+def new_food_form(request: Request):
+    return templates.TemplateResponse(
+        request=request,
+        name="foods/form.html"
+    )
+
+# CREATE ONE FOOD
+@views_router.post("/foods/new")
+def create_food(request: Request, food: FoodCreate = Depends(get_foods_form), db: Session = Depends(get_db)):
+    if find_name_duplicate(db, food.name):
+        return form_errors(request, ["L'aliment existe déjà."])
+
+    new_food = Foods(**food.model_dump())
+    db.add(new_food)
+    db.commit()
+    db.refresh(new_food)
+
+    return Response(status_code=200, headers={"HX-Redirect": f"/foods/{new_food.id}"})
 
 # GET FOOD DETAILS
 @views_router.get("/foods/{food_id}")
