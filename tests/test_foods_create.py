@@ -1,6 +1,8 @@
 from app.models.foods import Foods
 from tests.helpers import get_csrf_token
 
+# Zq prefix keeps test rows distinct from Ciqual data in the shared database
+
 VALID_FORM = {
     "name": "Zq Pudding maison",
     "calories": "250",
